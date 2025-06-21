@@ -23,6 +23,15 @@ export const LANGUAGES: Language[] = [
   },
 ];
 
+// Language variations for animated "Ka" character
+export const KA_VARIATIONS = [
+  "Ka", // English
+  "क",  // Hindi/Devanagari
+  "క",  // Telugu
+  "ਕ",  // Punjabi/Gurmukhi
+  "க",  // Tamil
+] as const;
+
 export const SUGGESTIONS: Suggestion[] = [
   {
     id: "time-traveler",

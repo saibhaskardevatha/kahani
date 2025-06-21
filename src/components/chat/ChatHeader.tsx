@@ -1,11 +1,12 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { StaticTitle } from '../StaticTitle';
 
 interface ChatHeaderProps {
-  title?: string;
+  language?: string;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ title = "Kahani" }) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ language = "Hindi" }) => {
   const router = useRouter();
 
   const handleGoHome = () => {
@@ -17,10 +18,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ title = "Kahani" }) => {
       <div className="container mx-auto px-4 py-3 max-w-4xl flex items-center justify-between">
         <button
           onClick={handleGoHome}
-          className="text-lg font-bold text-slate-900 dark:text-white cursor-pointer hover:opacity-80 transition-opacity"
+          className="cursor-pointer hover:opacity-80 transition-opacity"
           aria-label="Go to home page"
         >
-          {title}
+          <StaticTitle language={language} />
         </button>
         <button
           onClick={handleGoHome}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LanguageDropdown } from "../components/LanguageDropdown";
 import { TipsSection } from "../components/TipsSection";
 import { SuggestionsSection } from "../components/SuggestionsSection";
+import { AnimatedTitle } from "../components/AnimatedTitle";
 import { QuestionIcon, SparklesIcon } from "../components/icons";
 import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../constants";
 import { validatePrompt, generateChatId, buildChatUrl } from "../utils/validation";
@@ -55,9 +56,7 @@ export default function Home() {
       <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-2xl">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
-            {APP_CONFIG.title}
-          </h1>
+          <AnimatedTitle />
           <p className="text-muted-foreground">
             {APP_CONFIG.description}
           </p>
