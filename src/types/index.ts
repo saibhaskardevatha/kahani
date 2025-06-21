@@ -4,6 +4,12 @@ export interface Language {
   flag: string;
 }
 
+
+export interface Duration {
+  name: string; // Display label, e.g. "Short (5 min)"
+  value: string; // Internal value, e.g. "short"
+}
+
 export interface Suggestion {
   id: string;
   text: string;

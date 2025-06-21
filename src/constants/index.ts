@@ -1,4 +1,4 @@
-import { Language, Suggestion, Tip } from '../types';
+import { Language, Suggestion, Tip, Duration } from '../types';
 
 export const LANGUAGES: Language[] = [
   {
@@ -22,6 +22,14 @@ export const LANGUAGES: Language[] = [
     flag: "ਪੰਜਾਬੀ",
   },
 ];
+
+export const DURATIONS: Duration[] = [
+  { name: "Short (5 min)", value: "short" },
+  { name: "Medium (10 min)", value: "medium" },
+  { name: "Long (15+ min)", value: "long" },
+];
+
+export const DEFAULT_DURATION = "short";
 
 // Language variations for animated "Ka" character
 export const KA_VARIATIONS = [

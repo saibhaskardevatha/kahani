@@ -3,17 +3,19 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LanguageDropdown } from "../components/LanguageDropdown";
+import { DurationDropdown } from "../components/DurationDropdown";
 import { TipsSection } from "../components/TipsSection";
 import { SuggestionsSection } from "../components/SuggestionsSection";
 import { AnimatedTitle } from "../components/AnimatedTitle";
 import { QuestionIcon, SparklesIcon } from "../components/icons";
-import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../constants";
+import { LANGUAGES, DURATIONS, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, DEFAULT_DURATION, APP_CONFIG } from "../constants";
 import { validatePrompt, generateChatId, buildChatUrl } from "../utils/validation";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [showTips, setShowTips] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LANGUAGE);
+  const [selectedDuration, setSelectedDuration] = useState(DEFAULT_DURATION);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -26,6 +28,11 @@ export default function Home() {
     setSelectedLanguage(language);
   }, []);
 
+  const handleDurationSelect = useCallback((duration: string) => {
+    setSelectedDuration(duration);
+  }, []);
+
+
   const handleGenerate = useCallback(() => {
     const validation = validatePrompt(prompt);
     
@@ -36,9 +43,9 @@ export default function Home() {
 
     setError(null);
     const id = generateChatId();
-    const url = buildChatUrl(id, prompt, selectedLanguage);
+    const url = buildChatUrl(id, prompt, selectedLanguage, selectedDuration);
     router.push(url);
-  }, [prompt, selectedLanguage, router]);
+  }, [prompt, selectedLanguage, selectedDuration, router]);
 
   const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
@@ -95,7 +102,13 @@ export default function Home() {
             </button>
 
             <div className="flex items-center gap-3">
-              <LanguageDropdown
+              <DurationDropdown
+                  durations={DURATIONS}
+                  selectedDuration={selectedDuration}
+                  onDurationSelect={handleDurationSelect}
+                />
+
+                <LanguageDropdown
                 languages={LANGUAGES}
                 selectedLanguage={selectedLanguage}
                 onLanguageSelect={handleLanguageSelect}
