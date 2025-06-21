@@ -253,7 +253,7 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
     setCurrentStepIndex(prev => prev + 1);
   }, []);
 
-  const handleImproveClick = useCallback((indexToImprove: number) => {
+  const handleImproveClick = useCallback(() => {
     // Stop auto-continue timer and mark user interaction when Improve button is clicked
     if (autoContinueTimerRef.current) {
       clearTimeout(autoContinueTimerRef.current);
