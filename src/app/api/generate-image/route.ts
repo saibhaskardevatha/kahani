@@ -24,17 +24,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse the prompt as JSON to extract story details
-    let plot_outline, setting, style;
+    let plot_outline, setting;
     try {
       const promptData = JSON.parse(prompt);
       plot_outline = promptData.plot_outline;
       setting = promptData.setting;
-      style = promptData.style;
     } catch (error) {
       // If parsing fails, treat the entire prompt as plot_outline
       plot_outline = prompt;
       setting = '';
-      style = '';
       console.log(error)
     }
 
@@ -42,9 +40,13 @@ export async function POST(request: NextRequest) {
     You are a professional illustrator. You are given a story line, setting of the story & style of the story. You need to generate a illustration for the audio story.
     The story line is: ${plot_outline}
     The setting of the story is: ${setting}
-    The style of the story is: ${style}
 
-    Output should be in the following format: square image with 1:1 aspect ratio.
+    Output should follow the following guidelines:
+    - The image should be a square image with 1:1 aspect ratio and 1024x1024 resolution.
+    - The image should be an painted illustration of the story.
+    - The image should be a high-quality image.
+    - The image should be a image of the story.
+    - The image should be a image of the setting of the story.
     `;
 
     const config = {
