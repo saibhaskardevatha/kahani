@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Warpspeed FM",
+  title: "Kahani",
   description: "Share your story idea and we'll transform it into an immersive audio experience",
 };
 

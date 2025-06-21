@@ -1,8 +1,8 @@
-# 🚀 Warpspeed FM
+# 🚀 Kahani
 
 **Transform your story ideas into immersive audio experiences**
 
-Warpspeed FM takes user story prompts and generates complete audio narratives with multiple Indian languages support. The platform features a sophisticated workflow system that creates story outlines, generates characters, scripts, and produces audio content.
+Kahani takes user story prompts and generates complete audio narratives with multiple Indian languages support. The platform features a sophisticated workflow system that creates story outlines, generates characters, scripts, and produces audio content.
 
 ## ✨ Features
 
@@ -66,8 +66,8 @@ src/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/saibhaskardevatha/wrapspeed-fm.git
-   cd wrapspeed-fm
+   git clone https://github.com/saibhaskardevatha/kahani.git
+   cd kahani
    ```
 
 2. **Install dependencies**
@@ -128,7 +128,7 @@ We welcome contributions! Here's how you can help:
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/your-username/wrapspeed-fm.git
+   git clone https://github.com/your-username/kahani.git
    ```
 
 2. **Create a feature branch**
@@ -213,9 +213,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/saibhaskardevatha/wrapspeed-fm/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/saibhaskardevatha/wrapspeed-fm/discussions)
+- **Issues**: [GitHub Issues](https://github.com/saibhaskardevatha/kahani/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/saibhaskardevatha/kahani/discussions)
 
 ---
 
-**Made with ❤️ by the Warpspeed FM Team**
+**Made with ❤️ by the Kahani Team**

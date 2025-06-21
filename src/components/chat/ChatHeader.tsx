@@ -5,7 +5,7 @@ interface ChatHeaderProps {
   title?: string;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ title = "Warpspeed FM" }) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ title = "Kahani" }) => {
   const router = useRouter();
 
   const handleGoHome = () => {
