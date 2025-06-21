@@ -18,13 +18,13 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="mt-4 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg space-y-2 border border-slate-200 dark:border-slate-700">
+    <div className="mt-4 p-3 bg-slate-100 rounded-lg space-y-2 border border-slate-200">
       <textarea
         value={feedback}
         onChange={(e) => setFeedback(e.target.value)}
         onKeyDown={handleKeyPress}
         placeholder="What would you like to improve?"
-        className="w-full p-2 rounded-md bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+        className="w-full p-2 rounded-md bg-white border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
         rows={3}
         aria-label="Feedback input"
       />

@@ -192,7 +192,6 @@ export const MyComponent: React.FC<MyComponentProps> = ({ prop1, prop2 }) => {
 - Test components in different browsers
 - Verify accessibility with screen readers
 - Test responsive design on various devices
-- Ensure dark/light mode works correctly
 
 ### 🎨 Design Contributions
 - Follow the existing design system

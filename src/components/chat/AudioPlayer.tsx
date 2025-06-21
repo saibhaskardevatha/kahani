@@ -10,11 +10,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = () => {
   };
 
   return (
-    <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
-      <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-4">
+    <div className="mt-8 pt-8 border-t border-slate-200">
+      <h2 className="text-xl font-semibold text-slate-800 mb-4">
         Generated Episodes
       </h2>
-      <div className="bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-5 rounded-lg border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between">
+      <div className="bg-slate-50 p-4 sm:p-5 rounded-lg border border-slate-200/80 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={handlePlayPause}
@@ -44,10 +44,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = () => {
             )}
           </button>
           <div>
-            <p className="font-semibold text-slate-800 dark:text-slate-200">
+            <p className="font-semibold text-slate-800">
               Episode 1
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500">
               The Beginning
             </p>
           </div>
@@ -56,7 +56,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = () => {
         <div className="flex items-center gap-4">
           <AudioWaveform isPlaying={isPlaying} />
           <button
-            className="cursor-pointer p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+            className="cursor-pointer p-2 rounded-full hover:bg-slate-200 text-slate-500 transition-colors"
             title="Download Audios"
             aria-label="Download audio files"
           >

@@ -13,10 +13,10 @@ export const AnimatedTitle = () => {
 
     return () => clearInterval(interval);
   }, []);
-
+  
   return (
     <h1 className="text-3xl font-bold tracking-tight mb-2">
-    <span className="inline-block min-w-[1.5rem] font-bold text-3xl text-center transition-all duration-1500 ease-in-out text-red-600 dark:text-red-400 pr-0.5">
+    <span className="inline-block min-w-[1.5rem] font-bold text-3xl text-center transition-all duration-1500 ease-in-out text-red-600 pr-0.5">
         {KA_VARIATIONS[currentIndex]}
       </span>
       hani

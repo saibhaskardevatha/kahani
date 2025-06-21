@@ -52,9 +52,9 @@ export default function Home() {
   }, [handleGenerate]);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-2xl">
-        {/* Header */}
+        {/* Header */}  
         <div className="text-center">
           <AnimatedTitle />
           <p className="text-muted-foreground">
@@ -70,13 +70,13 @@ export default function Home() {
               onChange={handlePromptChange}
               onKeyDown={handleKeyPress}
               placeholder={APP_CONFIG.placeholder}
-              className="w-full min-h-[160px] p-5 rounded-md border-2 border-slate-200 dark:border-slate-700/50 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-black-500/50 dark:focus:ring-black-400/50 font-[family-name:var(--font-geist-sans)] text-base"
+              className="w-full min-h-[160px] p-5 rounded-md border-2 border-slate-200 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-black-500/50 font-[family-name:var(--font-geist-sans)] text-base"
               style={{ fontFamily: "var(--font-geist-sans)" }}
               aria-label="Story idea input"
               aria-describedby={error ? "error-message" : undefined}
             />
             {error && (
-              <p id="error-message" className="text-sm text-red-500 dark:text-red-400">
+              <p id="error-message" className="text-sm text-red-500">
                 {error}
               </p>
             )}
@@ -86,7 +86,7 @@ export default function Home() {
             {/* Tips Icon */}
             <button
               onClick={() => setShowTips(!showTips)}
-              className="cursor-pointer p-2 h-10 w-10 flex items-center justify-center rounded-full transition-colors text-slate-500 hover:bg-slate-200/70 dark:hover:bg-slate-800/70 dark:text-slate-400"
+              className="cursor-pointer p-2 h-10 w-10 flex items-center justify-center rounded-full transition-colors text-slate-500 hover:bg-slate-200/70"
               title="Show writing tips"
               aria-label="Toggle writing tips"
               aria-expanded={showTips}
@@ -104,7 +104,7 @@ export default function Home() {
               <button
                 onClick={handleGenerate}
                 disabled={!prompt.trim()}
-                className="rounded-md flex items-center justify-center bg-black text-white dark:bg-white dark:text-black gap-2 font-semibold text-sm h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:shadow-lg transition-shadow"
+                className="rounded-md flex items-center justify-center bg-black text-white gap-2 font-semibold text-sm h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:shadow-lg transition-shadow"
                 aria-label="Create audio story"
               >
                 {APP_CONFIG.createButtonText}

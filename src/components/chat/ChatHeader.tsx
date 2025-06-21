@@ -14,7 +14,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ language = "Hindi" }) =>
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
+    <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-slate-200">
       <div className="container mx-auto px-4 py-3 max-w-4xl flex items-center justify-between">
         <button
           onClick={handleGoHome}
@@ -25,7 +25,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ language = "Hindi" }) =>
         </button>
         <button
           onClick={handleGoHome}
-          className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex-shrink-0"
+          className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex-shrink-0"
           aria-label="Create new story"
         >
           <svg

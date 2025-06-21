@@ -24,24 +24,24 @@ export default function ChatPage() {
   } = useWorkflow(prompt);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen bg-white font-[family-name:var(--font-geist-sans)]">
       <ChatHeader language={language} />
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <div className="space-y-8">
           {/* Prompt Section */}
           <div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
+            <p className="text-sm text-slate-500 mb-2">
               Your Storyline
             </p>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-bold text-slate-900">
               {prompt || "No prompt provided"}
             </h1>
           </div>
 
           {/* Workflow Section */}
           {isPlanning ? (
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 pt-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-600 pt-2">
               <div 
                 className="w-3 h-3 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin"
                 aria-hidden="true"
@@ -69,7 +69,7 @@ export default function ChatPage() {
             </div>
           )}
         </div>
-      </div>
+      </div>  
     </div>
   );
 }

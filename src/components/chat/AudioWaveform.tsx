@@ -13,7 +13,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({ isPlaying }) => {
             x2="100" 
             y2="12" 
             strokeWidth="2" 
-            className="stroke-slate-300 dark:stroke-slate-600" 
+            className="stroke-slate-300" 
           />
         </svg>
       </div>

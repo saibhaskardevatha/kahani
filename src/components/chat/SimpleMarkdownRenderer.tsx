@@ -16,7 +16,7 @@ export const SimpleMarkdownRenderer: React.FC<SimpleMarkdownRendererProps> = ({ 
           return (
             <strong
               key={index}
-              className="font-semibold text-slate-800 dark:text-slate-200"
+              className="font-semibold text-slate-800"
             >
               {segment.substring(2, segment.length - 2)}
             </strong>
