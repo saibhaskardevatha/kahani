@@ -2,6 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
+import { RotateCcw, ArrowUpDown, ChevronsRight } from "lucide-react";
 
 const workflowStepsData = [
   {
@@ -166,22 +167,22 @@ const WorkflowStep = ({
             <div className="mt-2 text-slate-600 dark:text-slate-400 whitespace-pre-wrap leading-relaxed text-sm">
               <SimpleMarkdownRenderer text={content} />
               {isInProgress && (
-                <span className="inline-block w-1.5 h-4 bg-slate-700 dark:bg-white animate-pulse ml-1 align-bottom"></span>
+                <span className="inline-block w-1.5 h-4 bg-slate-700 dark:bg-white animate-pulse ml-1 align-middle"></span>
               )}
             </div>
             {isCompleted && (
-                <div className="mt-4 border-t border-slate-200 dark:border-slate-700/60 pt-3 flex items-center gap-2">
-                    <button onClick={onRetry} title="Retry" className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 font-semibold px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                <div className="mt-4 border-t border-slate-200 dark:border-slate-700/60 pt-3 flex items-center gap-2 animate-in slide-in-from-top-2 duration-500 ease-out">
+                    <button onClick={onRetry} title="Retry" className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-yellow-600 dark:hover:text-yellow-400 font-semibold px-2 py-1 rounded-md hover:bg-yellow-50 dark:hover:bg-yellow-900/20 transition-all duration-200 transform">
+                        <RotateCcw className="w-3.5 h-3.5" />
                         Retry
                     </button>
-                    <button onClick={() => setIsFeedbackVisible(!isFeedbackVisible)} title="Improve" className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 font-semibold px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m18 5-3-3-3 3M6 19l3 3 3-3"/><path d="M12 19V3M5 12h14"/></svg>
+                    <button onClick={() => setIsFeedbackVisible(!isFeedbackVisible)} title="Improve" className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 font-semibold px-2 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 transform">
+                        <ArrowUpDown className="w-3.5 h-3.5" />
                         Improve
                     </button>
                     {!isLast && (
-                        <button onClick={onContinue} title="Continue to Next Step" className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-blue-500 dark:hover:text-blue-400 font-semibold px-2 py-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M13 17l5-5-5-5M6 17l5-5-5-5"/></svg>
+                        <button onClick={onContinue} title="Continue to Next Step" className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-green-600 dark:hover:text-green-400 font-semibold px-2 py-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-200 transform">
+                            <ChevronsRight className="w-3.5 h-3.5" />
                             Continue
                         </button>
                     )}
@@ -193,6 +194,59 @@ const WorkflowStep = ({
       </div>
     </div>
   );
+};
+
+const AudioWaveform = ({ isPlaying }: { isPlaying: boolean }) => {
+    if (!isPlaying) {
+        return (
+             <div className="flex items-center justify-center w-24 h-6">
+                <svg width="100" height="24" viewBox="0 0 100 24">
+                    <line x1="0" y1="12" x2="100" y2="12" strokeWidth="2" className="stroke-slate-300 dark:stroke-slate-600" />
+                </svg>
+            </div>
+        );
+    }
+
+    const wavePaths = [
+        {
+            color: 'rgb(59 130 246 / 0.8)', // blue-500
+            dur: '1.5s',
+            values: 'M 0 12 C 25 0, 75 24, 100 12; M 0 12 C 25 24, 75 0, 100 12; M 0 12 C 25 0, 75 24, 100 12'
+        },
+        {
+            color: 'rgb(99 102 241 / 0.6)', // indigo-500
+            dur: '2s',
+            values: 'M 0 12 C 20 24, 40 0, 60 12 C 80 24, 100 12, 100 12; M 0 12 C 20 0, 40 24, 60 12 C 80 0, 100 12, 100 12; M 0 12 C 20 24, 40 0, 60 12 C 80 24, 100 12, 100 12'
+        },
+        {
+            color: 'rgb(236 72 153 / 0.5)', // pink-500
+            dur: '1.2s',
+            values: 'M 0 12 C 30 18, 70 6, 100 12; M 0 12 C 30 6, 70 18, 100 12; M 0 12 C 30 18, 70 6, 100 12'
+        }
+    ];
+
+    return (
+        <div className="flex items-center justify-center w-24 h-6">
+            <svg width="100" height="24" viewBox="0 0 100 24">
+                {wavePaths.map((wave, index) => (
+                    <path
+                        key={index}
+                        fill="none"
+                        stroke={wave.color}
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                    >
+                        <animate
+                            attributeName="d"
+                            dur={wave.dur}
+                            repeatCount="indefinite"
+                            values={wave.values}
+                        />
+                    </path>
+                ))}
+            </svg>
+        </div>
+    );
 };
 
 const AudioPlayer = () => {
@@ -225,7 +279,7 @@ const AudioPlayer = () => {
                 height="20"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="flex items-center justify-center ml-0.5"
+                className="flex items-center justify-center"
               >
                 <path d="M8 5v14l11-7z" />
               </svg>
@@ -242,41 +296,7 @@ const AudioPlayer = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <svg width="100" height="24" className="w-24">
-            <defs>
-              <linearGradient
-                id="waveGradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="0%"
-              >
-                <stop offset="0%" stopColor="rgb(59 130 246)" />
-                <stop offset="100%" stopColor="rgb(99 102 241)" />
-              </linearGradient>
-            </defs>
-            <path
-              d={
-                !isPlaying
-                  ? "M 0 12 C 25 12, 75 12, 100 12"
-                  : "M 0 12 C 25 24, 75 0, 100 12"
-              }
-              stroke="url(#waveGradient)"
-              fill="none"
-              strokeWidth="2"
-              strokeLinecap="round"
-              className="transition-all duration-300 ease-in-out"
-            >
-              {isPlaying && (
-                <animate
-                  attributeName="d"
-                  values="M 0 12 C 25 0, 75 24, 100 12;M 0 12 C 25 24, 75 0, 100 12;M 0 12 C 25 0, 75 24, 100 12"
-                  dur="1.5s"
-                  repeatCount="indefinite"
-                />
-              )}
-            </path>
-          </svg>
+          <AudioWaveform isPlaying={isPlaying} />
           <button
             className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
             title="Download Audios"
