@@ -36,7 +36,7 @@ export const DurationDropdown: React.FC<DurationDropdownProps> = ({
     <div className="relative" ref={dropdownRef} onKeyDown={handleKeyDown}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-md border-2 border-slate-200 dark:border-slate-700/50 bg-background text-foreground h-10 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black-500/50 dark:focus:ring-black-400/50 cursor-pointer hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
+        className="flex items-center gap-2 rounded-md border-2 border-slate-200 bg-background text-foreground h-10 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black-500/50 cursor-pointer hover:border-slate-300 transition-colors"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={`Selected duration: ${selectedDurationData?.name}`}
@@ -50,7 +50,7 @@ export const DurationDropdown: React.FC<DurationDropdownProps> = ({
 
       {isOpen && (
         <div
-          className="absolute top-full left-0 mt-1 w-60 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md shadow-lg z-10 overflow-hidden"
+          className="absolute top-full left-0 mt-1 w-60 bg-white border border-slate-200 rounded-md shadow-lg z-10 overflow-hidden"
           role="listbox"
           aria-label="Duration options"
         >
@@ -58,10 +58,10 @@ export const DurationDropdown: React.FC<DurationDropdownProps> = ({
             <button
               key={duration.value}
               onClick={() => handleDurationSelect(duration.value)}
-              className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+              className={`cursor-pointer w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 transition-colors ${
                 selectedDuration === duration.value
-                  ? "bg-slate-100 dark:bg-slate-700 text-black dark:text-white"
-                  : "text-slate-700 dark:text-slate-300"
+                  ? "bg-slate-100 text-black"
+                  : "text-slate-700"
               }`}
               role="option"
               aria-selected={selectedDuration === duration.value}
