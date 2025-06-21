@@ -17,6 +17,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isDownloading, setIsDownloading] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -65,13 +66,34 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     setCurrentTime(0);
   };
 
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = audioUrl;
-    link.download = `${title.replace(/\s/g, "_")}.mp3`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async () => {
+    if (!audioUrl) return;
+    
+    setIsDownloading(true);
+    
+    try {
+      const response = await fetch(audioUrl);
+      if (!response.ok) throw new Error('Failed to fetch');
+      
+      const blob = await response.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      
+      // Create a safe filename with proper extension
+      const safeTitle = title.replace(/[^a-zA-Z0-9\s-_]/g, '').replace(/\s+/g, '_');
+      const urlParts = audioUrl.split('.');
+      const fileExtension = urlParts.length > 1 ? urlParts[urlParts.length - 1].split('?')[0] : 'wav';
+      a.download = `${safeTitle}.${fileExtension}`;
+      
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      window.open(audioUrl, '_blank');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const formatTime = (timeInSeconds: number) => {
@@ -125,25 +147,41 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               </div>
               <button
                 onClick={handleDownload}
-                disabled={!audioUrl}
+                disabled={!audioUrl || isDownloading}
                 className="cursor-pointer p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                title="Download"
-                aria-label="Download audio"
+                title={isDownloading ? "Downloading..." : "Download"}
+                aria-label={isDownloading ? "Downloading audio" : "Download audio"}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
+                {isDownloading ? (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="animate-spin"
+                  >
+                    <path d="M21 12a9 9 0 11-6.219-8.56"></path>
+                  </svg>
+                ) : (
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                  </svg>
+                )}
               </button>
             </div>
           </div>

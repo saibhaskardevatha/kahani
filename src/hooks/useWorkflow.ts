@@ -330,6 +330,32 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     }
   }, [steps.length, startTimer, handleContinue, updateStep]);
   
+  const streamLoaderText = useCallback((stepIndex: number, loaderText: string, onComplete: () => void) => {
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+    }
+
+    updateStep(stepIndex, { streamedContent: '' });
+
+    const startTime = Date.now();
+    const streamingSpeed = WORKFLOW_CONFIG.streamingSpeed;
+
+    streamIntervalRef.current = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      const charsToShow = Math.floor(elapsedTime / streamingSpeed);
+
+      if (charsToShow >= loaderText.length) {
+        clearInterval(streamIntervalRef.current!);
+        streamIntervalRef.current = null;
+        updateStep(stepIndex, { streamedContent: loaderText });
+        onComplete();
+        return;
+      }
+
+      updateStep(stepIndex, { streamedContent: loaderText.slice(0, charsToShow) });
+    }, 40); // Update roughly 25 times per second
+  }, [updateStep]);
+
   const onDataReceived = useCallback((stepIndex: number, fullText: string) => {
     if (streamIntervalRef.current) {
         clearInterval(streamIntervalRef.current);
@@ -477,13 +503,16 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
         updateStep(currentStepIndex, {
           status: WORKFLOW_STATUS.IN_PROGRESS,
           isExpanded: true,
-          streamedContent: currentStep.loaderContent[Math.floor(Math.random() * currentStep.loaderContent.length)],
         });
-        stepExecution.executeStep(currentStepIndex);
+        
+        const loaderText = currentStep.loaderContent[Math.floor(Math.random() * currentStep.loaderContent.length)];
+        streamLoaderText(currentStepIndex, loaderText, () => {
+          stepExecution.executeStep(currentStepIndex);
+        });
       }, WORKFLOW_CONFIG.stepStartDelay);
       return () => clearTimeout(timer);
     }
-  }, [isPlanning, prompt, currentStepIndex, steps, updateStep, stepExecution]);
+  }, [isPlanning, prompt, currentStepIndex, steps, updateStep, stepExecution, streamLoaderText]);
 
   // Final cleanup on unmount
   useEffect(() => {
