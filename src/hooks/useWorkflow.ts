@@ -7,10 +7,19 @@ interface UseWorkflowReturn {
   currentStepIndex: number;
   isPlanning: boolean;
   isWorkflowComplete: boolean;
+  autoContinueTimer: {
+    isRunning: boolean;
+    isPaused: boolean;
+    timeLeft: number;
+    activeStepIndex: number | null;
+  };
   handleToggleExpand: (indexToToggle: number) => void;
   handleRetry: (indexToRetry: number) => void;
   handleContinue: (indexToContinueFrom: number) => void;
   handleImprove: (indexToImprove: number, feedback: string) => void;
+  handleImproveClick: (indexToImprove: number) => void;
+  handleStopTimer: () => void;
+  handleResumeTimer: () => void;
 }
 
 export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
@@ -27,7 +36,18 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlanning, setIsPlanning] = useState(true);
   const [isWorkflowComplete, setIsWorkflowComplete] = useState(false);
+  const [autoContinueTimer, setAutoContinueTimer] = useState({
+    isRunning: false,
+    isPaused: false,
+    timeLeft: 10,
+    activeStepIndex: null as number | null,
+  });
+  
   const charIndexRef = useRef(0);
+  const autoContinueTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const userInteractedRef = useRef(false);
+  const pausedTimeLeftRef = useRef(10);
 
   // Effect for initial "Planning..." phase
   useEffect(() => {
@@ -110,7 +130,35 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
                 : step
             )
           );
-          if (currentStepIndex === steps.length - 1) {
+          
+          // Start auto-continue timer when step completes
+          if (currentStepIndex < steps.length - 1) {
+            userInteractedRef.current = false;
+            setAutoContinueTimer({
+              isRunning: true,
+              isPaused: false,
+              timeLeft: 10,
+              activeStepIndex: currentStepIndex,
+            });
+            pausedTimeLeftRef.current = 10;
+            
+            // Start countdown timer
+            countdownTimerRef.current = setInterval(() => {
+              setAutoContinueTimer(prev => {
+                if (prev.timeLeft <= 1) {
+                  clearInterval(countdownTimerRef.current!);
+                  return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
+                }
+                return { ...prev, timeLeft: prev.timeLeft - 1 };
+              });
+            }, 1000);
+            
+            autoContinueTimerRef.current = setTimeout(() => {
+              if (!userInteractedRef.current) {
+                handleContinue(currentStepIndex);
+              }
+            }, 10000); // 10 seconds
+          } else {
             setIsWorkflowComplete(true);
           }
         }, WORKFLOW_CONFIG.completionDelay);
@@ -142,6 +190,23 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
   }, []);
 
   const handleRetry = useCallback((indexToRetry: number) => {
+    // Stop auto-continue timer and mark user interaction
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    userInteractedRef.current = true;
+    setAutoContinueTimer({
+      isRunning: false,
+      isPaused: false,
+      timeLeft: 10,
+      activeStepIndex: null,
+    });
+    
     setIsWorkflowComplete(false);
     setSteps(prev =>
       prev.map((step, i) => {
@@ -163,6 +228,23 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
   }, []);
   
   const handleContinue = useCallback((indexToContinueFrom: number) => {
+    // Stop auto-continue timer
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    
+    setAutoContinueTimer({
+      isRunning: false,
+      isPaused: false,
+      timeLeft: 10,
+      activeStepIndex: null,
+    });
+    
     setSteps(prev =>
       prev.map((step, i) =>
         i === indexToContinueFrom ? { ...step, isExpanded: false } : step
@@ -171,19 +253,100 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
     setCurrentStepIndex(prev => prev + 1);
   }, []);
 
+  const handleImproveClick = useCallback((indexToImprove: number) => {
+    // Stop auto-continue timer and mark user interaction when Improve button is clicked
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    userInteractedRef.current = true;
+    setAutoContinueTimer({
+      isRunning: false,
+      isPaused: false,
+      timeLeft: 10,
+      activeStepIndex: null,
+    });
+  }, []);
+
+  const handleStopTimer = useCallback(() => {
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    pausedTimeLeftRef.current = autoContinueTimer.timeLeft;
+    setAutoContinueTimer(prev => ({
+      ...prev,
+      isRunning: false,
+      isPaused: true,
+    }));
+  }, [autoContinueTimer.timeLeft]);
+
+  const handleResumeTimer = useCallback(() => {
+    if (autoContinueTimer.isPaused && !userInteractedRef.current && autoContinueTimer.activeStepIndex !== null) {
+      const remainingTime = pausedTimeLeftRef.current * 1000;
+      
+      // Start countdown timer
+      countdownTimerRef.current = setInterval(() => {
+        setAutoContinueTimer(prev => {
+          if (prev.timeLeft <= 1) {
+            clearInterval(countdownTimerRef.current!);
+            return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
+          }
+          return { ...prev, timeLeft: prev.timeLeft - 1 };
+        });
+      }, 1000);
+      
+      autoContinueTimerRef.current = setTimeout(() => {
+        if (!userInteractedRef.current) {
+          handleContinue(autoContinueTimer.activeStepIndex!);
+        }
+      }, remainingTime);
+      
+      setAutoContinueTimer(prev => ({
+        ...prev,
+        isRunning: true,
+        isPaused: false,
+      }));
+    }
+  }, [autoContinueTimer.isPaused, autoContinueTimer.activeStepIndex]);
+
   const handleImprove = useCallback((indexToImprove: number, feedback: string) => {
     console.log(`Feedback for step ${indexToImprove} ("${steps[indexToImprove].title}"): ${feedback}`);
     // Here you could add logic to re-run the step with the new feedback
   }, [steps]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoContinueTimerRef.current) {
+        clearTimeout(autoContinueTimerRef.current);
+      }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, []);
 
   return {
     steps,
     currentStepIndex,
     isPlanning,
     isWorkflowComplete,
+    autoContinueTimer,
     handleToggleExpand,
     handleRetry,
     handleContinue,
     handleImprove,
+    handleImproveClick,
+    handleStopTimer,
+    handleResumeTimer,
   };
 }; 

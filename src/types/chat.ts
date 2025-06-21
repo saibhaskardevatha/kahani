@@ -23,6 +23,16 @@ export interface WorkflowStepProps {
   onRetry: () => void;
   onContinue: () => void;
   onImprove: (feedback: string) => void;
+  onImproveClick: () => void;
+  stepIndex: number;
+  autoContinueTimer?: {
+    isRunning: boolean;
+    isPaused: boolean;
+    timeLeft: number;
+    activeStepIndex: number | null;
+  };
+  onStopTimer?: () => void;
+  onResumeTimer?: () => void;
 }
 
 export interface FeedbackFormProps {

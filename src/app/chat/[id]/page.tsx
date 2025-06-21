@@ -17,10 +17,14 @@ export default function ChatPage() {
     steps,
     isPlanning,
     isWorkflowComplete,
+    autoContinueTimer,
     handleToggleExpand,
     handleRetry,
     handleContinue,
     handleImprove,
+    handleImproveClick,
+    handleStopTimer,
+    handleResumeTimer,
   } = useWorkflow(prompt);
 
   return (
@@ -63,6 +67,11 @@ export default function ChatPage() {
                   onRetry={() => handleRetry(index)}
                   onContinue={() => handleContinue(index)}
                   onImprove={(feedback: string) => handleImprove(index, feedback)}
+                  onImproveClick={() => handleImproveClick(index)}
+                  stepIndex={index}
+                  autoContinueTimer={autoContinueTimer}
+                  onStopTimer={handleStopTimer}
+                  onResumeTimer={handleResumeTimer}
                 />
               ))}
               {isWorkflowComplete && <AudioPlayer />}

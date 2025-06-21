@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RotateCcw, ArrowUpDown, ChevronsRight } from "lucide-react";
+import { RotateCcw, ArrowUpDown, ChevronsRight, Pause } from "lucide-react";
 import { WorkflowStepProps } from '../../types/chat';
 import { SimpleMarkdownRenderer } from './SimpleMarkdownRenderer';
 import { FeedbackForm } from './FeedbackForm';
@@ -15,6 +15,10 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
   onRetry,
   onContinue,
   onImprove,
+  onImproveClick,
+  autoContinueTimer,
+  onStopTimer,
+  stepIndex,
 }) => {
   const isCompleted = status === "completed";
   const isInProgress = status === "in-progress";
@@ -28,8 +32,14 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
   };
 
   const handleToggleFeedback = () => {
+    onImproveClick(); // Stop the auto-continue timer when Improve button is clicked
     setIsFeedbackVisible(!isFeedbackVisible);
   };
+
+  // Check if this step should show the timer (only for the active step that has timer running)
+  const isActiveStep = autoContinueTimer?.activeStepIndex === stepIndex;
+  const shouldShowTimer = isCompleted && !isLast && autoContinueTimer?.isRunning && isActiveStep;
+  const shouldShowContinueButton = isCompleted && !isLast && !shouldShowTimer;
 
   return (
     <div
@@ -133,7 +143,25 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
                   <ArrowUpDown className="w-3.5 h-3.5" />
                   Improve
                 </button>
-                {!isLast && (
+                
+                {/* Timer display - replaces Continue button when auto-continue is running for this step */}
+                {shouldShowTimer && (
+                  <div className="flex items-center gap-2 text-xs text-slate-500 font-semibold">
+                    <span>Continuing in {autoContinueTimer.timeLeft}s</span>
+                    <button 
+                      onClick={onStopTimer}
+                      title="Stop auto-continue" 
+                      className="cursor-pointer flex items-center gap-1.5 text-xs text-slate-500 hover:text-orange-700 font-semibold px-2 py-1 rounded-md hover:bg-orange-50 transition-all duration-200 transform"
+                      aria-label="Stop auto-continue timer"
+                    >
+                      <Pause className="w-3.5 h-3.5" />
+                      Stop
+                    </button>
+                  </div>
+                )}
+                
+                {/* Original Continue button - shows when timer is not running for this step */}
+                {shouldShowContinueButton && (
                   <button 
                     onClick={onContinue} 
                     title="Continue to Next Step" 
