@@ -33,10 +33,5 @@ export interface AudioWaveformProps {
   isPlaying: boolean;
 }
 
-export interface AudioPlayerProps {
-  // Add props if needed in the future
-}
-
-export interface ChatPageProps {
-  // Add props if needed in the future
-} 
+export type AudioPlayerProps = Record<string, never>;
+export type ChatPageProps = Record<string, never>; 

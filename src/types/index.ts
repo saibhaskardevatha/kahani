@@ -14,6 +14,4 @@ export interface Tip {
   text: string;
 }
 
-export interface HomePageProps {
-  // Add any props if needed in the future
-} 
+export type HomePageProps = Record<string, never>; 
