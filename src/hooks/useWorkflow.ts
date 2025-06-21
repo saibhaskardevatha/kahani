@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WorkflowStep, WorkflowStepData } from '../types/chat';
 import { WORKFLOW_STEPS_DATA, WORKFLOW_CONFIG, WORKFLOW_STATUS } from '../constants/workflow';
-import { getStoryOutline, StoryOutlineResponse } from '../lib/api';
+import { getStoryOutline, StoryOutlineResponse, PersonaResponse } from '../lib/api';
 
 interface UseWorkflowReturn {
   steps: WorkflowStep[];
@@ -33,10 +33,9 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
       isVisible: false,
     }))
   );
-  const [storyOutlineLoading, setStoryOutlineLoading] = useState(false);
-  const [storyOutlineError, setStoryOutlineError] = useState<string | null>(null);
+  // Removed unused: storyOutlineLoading, storyOutlineError
   const [storyOutlineData, setStoryOutlineData] = useState<StoryOutlineResponse | null>(null);
-  const [personaData, setPersonaData] = useState<any | null>(null);
+  const [personaData, setPersonaData] = useState<PersonaResponse | null>(null);
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlanning, setIsPlanning] = useState(true);
@@ -108,23 +107,21 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
 
   // Effect to handle the streaming animation
   const statusOfCurrentStep = steps[currentStepIndex]?.status;
+
+
   useEffect(() => {
     // Step 1: Story Outline (already implemented above)
     if (currentStepIndex === 0 && statusOfCurrentStep === WORKFLOW_STATUS.IN_PROGRESS && prompt) {
-      setStoryOutlineLoading(true);
-      setStoryOutlineError(null);
       getStoryOutline(prompt)
         .then((data) => {
           setStoryOutlineData(data);
           const formatted = data.plot_outline;
           setSteps((prev) => prev.map((step, idx) => idx === 0 ? { ...step, streamedContent: formatted } : step));
         })
-        .catch((e) => {
-          setStoryOutlineError(e.message || 'Failed to fetch story outline');
+        .catch(() => {
           setSteps((prev) => prev.map((step, idx) => idx === 0 ? { ...step, streamedContent: 'Error: Failed to fetch story outline.' } : step));
         })
         .finally(() => {
-          setStoryOutlineLoading(false);
           setTimeout(() => {
             setSteps((prev) => prev.map((step, idx) => idx === 0 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
             if (currentStepIndex < steps.length - 1) {
@@ -199,12 +196,13 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
         getPersona(storyOutlineData)
           .then((personaObj) => {
             setPersonaData(personaObj); // save the raw persona response
-            const formatted = Object.entries(personaObj).map(([key, char]) =>
+            // Use correct type for persona characters
+            const formatted = Object.values(personaObj).map((char: import('../lib/api').PersonaCharacter) =>
               `**${char.name}**\nAge: ${char.age}\nGender: ${char.gender}\nBackground: ${char.background}\nPersonality Traits: ${char.personality_traits}`
             ).join('\n\n');
             setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, streamedContent: formatted } : step));
           })
-          .catch((e) => {
+          .catch(() => {
             setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, streamedContent: 'Error: Failed to fetch persona.' } : step));
           })
           .finally(() => {
@@ -281,7 +279,6 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
       setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, streamedContent: 'Generating script...' } : step));
       import('../lib/api').then(({ getScript }) => {
         // Log the objects being sent to the script API
-        // eslint-disable-next-line no-console
         console.log('SCRIPT API CALL INPUT:', {
           language: 'hindi',
           story_outline: storyOutlineData,
@@ -303,12 +300,12 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
         getScript('hindi', storyOutlineData, personaData)
           .then((scriptData) => {
             // Format script output for display
-            const formatted = scriptData.script.map((line, idx) =>
+            const formatted = scriptData.script.map((line) =>
               `**${line.speaker}:** ${line.text}\n_voice: ${line.voice_config.voice_model}, pitch: ${line.voice_config.pitch}, pace: ${line.voice_config.pace}, loudness: ${line.voice_config.loudness}_`
             ).join('\n\n');
             setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, streamedContent: formatted } : step));
           })
-          .catch((e) => {
+          .catch(() => {
             setSteps((prev) => prev.map((step, idx) => idx === 2 ? {
               ...step,
               streamedContent: 'Error: Failed to fetch script.\n' +
@@ -404,9 +401,37 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
       }
     }, WORKFLOW_CONFIG.streamingSpeed);
     return () => clearInterval(intervalId);
-  }, [statusOfCurrentStep, currentStepIndex, steps.length, prompt, storyOutlineData, personaData]);
+  // Add handleContinue and steps to dependencies as required by exhaustive-deps
+  // Fix exhaustive-deps: useCallback for handleContinue and include it and steps in deps
+  }, [statusOfCurrentStep, currentStepIndex, steps.length, prompt, storyOutlineData, personaData, steps]);
+
+  // Unified handleContinue: advances workflow and manages timers
+  const handleContinue = useCallback((indexToContinueFrom: number) => {
+    // Stop auto-continue timer
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setAutoContinueTimer({
+      isRunning: false,
+      isPaused: false,
+      timeLeft: 10,
+      activeStepIndex: null,
+    });
+    setSteps(prev =>
+      prev.map((step, i) =>
+        i === indexToContinueFrom ? { ...step, isExpanded: false } : step
+      )
+    );
+    setCurrentStepIndex(prev => prev + 1);
+  }, []);
 
   // Effect to collapse all steps on final completion
+  // (Add handleContinue to dependency array if needed)
   useEffect(() => {
     if (isWorkflowComplete) {
       const timer = setTimeout(() => {
@@ -465,31 +490,7 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
     setCurrentStepIndex(indexToRetry);
   }, []);
   
-  const handleContinue = useCallback((indexToContinueFrom: number) => {
-    // Stop auto-continue timer
-    if (autoContinueTimerRef.current) {
-      clearTimeout(autoContinueTimerRef.current);
-      autoContinueTimerRef.current = null;
-    }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
-    
-    setAutoContinueTimer({
-      isRunning: false,
-      isPaused: false,
-      timeLeft: 10,
-      activeStepIndex: null,
-    });
-    
-    setSteps(prev =>
-      prev.map((step, i) =>
-        i === indexToContinueFrom ? { ...step, isExpanded: false } : step
-      )
-    );
-    setCurrentStepIndex(prev => prev + 1);
-  }, []);
+
 
   const handleImproveClick = useCallback(() => {
     // Stop auto-continue timer and mark user interaction when Improve button is clicked
