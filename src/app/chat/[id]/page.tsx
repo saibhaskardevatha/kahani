@@ -6,13 +6,13 @@ import { WorkflowStep } from "../../../components/chat/WorkflowStep";
 import { AudioPlayer } from "../../../components/chat/AudioPlayer";
 import { useWorkflow } from "../../../hooks/useWorkflow";
 import { WorkflowStep as WorkflowStepType } from "../../../types/chat";
-import { DEFAULT_LANGUAGE, DEFAULT_DURATION } from "../../../constants";
+import { DEFAULT_LANGUAGE } from "../../../constants";
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const prompt = searchParams.get("prompt");
   const language = searchParams.get("language") || DEFAULT_LANGUAGE;
-  const duration = searchParams.get("duration") || DEFAULT_DURATION;
+
 
   const {
     steps,
