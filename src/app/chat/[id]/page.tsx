@@ -1,18 +1,18 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { ChatHeader } from "../../../components/chat/ChatHeader";
-import { WorkflowStep } from "../../../components/chat/WorkflowStep";
-import { AudioPlayer } from "../../../components/chat/AudioPlayer";
-import { useWorkflow } from "../../../hooks/useWorkflow";
-import { WorkflowStep as WorkflowStepType } from "../../../types/chat";
-import { DEFAULT_LANGUAGE } from "../../../constants";
+import { useEffect } from "react";
+import { ChatHeader } from "@/components/chat/ChatHeader";
+import { WorkflowStep } from "@/components/chat/WorkflowStep";
+import { AudioPlayer } from "@/components/chat/AudioPlayer";
+import { useWorkflow } from "@/hooks/useWorkflow";
+import { WorkflowStep as WorkflowStepType } from "@/types/chat";
+import { DEFAULT_LANGUAGE } from "@/constants";
 
 export default function ChatPage() {
   const searchParams = useSearchParams();
   const prompt = searchParams.get("prompt");
   const language = searchParams.get("language") || DEFAULT_LANGUAGE;
-
 
   const {
     steps,
@@ -26,7 +26,14 @@ export default function ChatPage() {
     handleImproveClick,
     handleStopTimer,
     handleResumeTimer,
-  } = useWorkflow(prompt);
+  } = useWorkflow(prompt, { language });
+
+  useEffect(() => {
+    const debugInfo = document.querySelector('#debug-info');
+    if (debugInfo) {
+      debugInfo.remove();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white font-[family-name:var(--font-geist-sans)]">

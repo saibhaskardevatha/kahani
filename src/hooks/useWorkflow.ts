@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WorkflowStep, WorkflowStepData } from '../types/chat';
 import { WORKFLOW_STEPS_DATA, WORKFLOW_CONFIG, WORKFLOW_STATUS } from '../constants/workflow';
-import { getStoryOutline, StoryOutlineResponse, PersonaResponse } from '../lib/api';
+import { getStoryOutline, getPersona, getScript, StoryOutlineResponse, PersonaResponse } from '../lib/api';
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 interface UseWorkflowReturn {
   steps: WorkflowStep[];
   currentStepIndex: number;
   isPlanning: boolean;
   isWorkflowComplete: boolean;
-  autoContinueTimer: {
-    isRunning: boolean;
-    isPaused: boolean;
-    timeLeft: number;
-    activeStepIndex: number | null;
-  };
+  autoContinueTimer: AutoContinueTimer;
   handleToggleExpand: (indexToToggle: number) => void;
   handleRetry: (indexToRetry: number) => void;
   handleContinue: (indexToContinueFrom: number) => void;
@@ -23,51 +22,403 @@ interface UseWorkflowReturn {
   handleResumeTimer: () => void;
 }
 
-export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
-  const [steps, setSteps] = useState<WorkflowStep[]>(
-    WORKFLOW_STEPS_DATA.map((s: WorkflowStepData, idx: number) => ({
-      ...s,
-      status: WORKFLOW_STATUS.PENDING,
-      streamedContent: idx === 0 ? '' : s.content,
-      isExpanded: false,
-      isVisible: false,
-    }))
-  );
-  // Removed unused: storyOutlineLoading, storyOutlineError
-  const [storyOutlineData, setStoryOutlineData] = useState<StoryOutlineResponse | null>(null);
-  const [personaData, setPersonaData] = useState<PersonaResponse | null>(null);
+interface AutoContinueTimer {
+  isRunning: boolean;
+  isPaused: boolean;
+  timeLeft: number;
+  activeStepIndex: number | null;
+}
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [isPlanning, setIsPlanning] = useState(true);
-  const [isWorkflowComplete, setIsWorkflowComplete] = useState(false);
-  const [autoContinueTimer, setAutoContinueTimer] = useState({
+interface WorkflowConfig {
+  language?: string;
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+const initializeSteps = (): WorkflowStep[] => {
+  return WORKFLOW_STEPS_DATA.map((step: WorkflowStepData, idx: number) => ({
+    ...step,
+    status: WORKFLOW_STATUS.PENDING,
+    streamedContent: idx === 0 ? '' : step.content,
+    isExpanded: false,
+    isVisible: false,
+  }));
+};
+
+// ============================================================================
+// CUSTOM HOOKS
+// ============================================================================
+
+const useAutoContinueTimer = () => {
+  const [timer, setTimer] = useState<AutoContinueTimer>({
     isRunning: false,
     isPaused: false,
     timeLeft: 10,
-    activeStepIndex: null as number | null,
+    activeStepIndex: null,
   });
 
-  const charIndexRef = useRef(0);
   const autoContinueTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const userInteractedRef = useRef(false);
   const pausedTimeLeftRef = useRef(10);
+  const userInteractedRef = useRef(false);
 
-  // Effect for initial "Planning..." phase
+  const startTimer = useCallback((stepIndex: number, onComplete: () => void) => {
+    userInteractedRef.current = false;
+    setTimer({
+      isRunning: true,
+      isPaused: false,
+      timeLeft: 10,
+      activeStepIndex: stepIndex,
+    });
+    pausedTimeLeftRef.current = 10;
+
+    countdownTimerRef.current = setInterval(() => {
+      setTimer(prev => {
+        if (prev.timeLeft <= 1) {
+          clearInterval(countdownTimerRef.current!);
+          return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
+        }
+        return { ...prev, timeLeft: prev.timeLeft - 1 };
+      });
+    }, 1000);
+
+    autoContinueTimerRef.current = setTimeout(() => {
+      if (!userInteractedRef.current) {
+        onComplete();
+      }
+    }, 10000);
+  }, []);
+
+  const stopTimer = useCallback(() => {
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    pausedTimeLeftRef.current = timer.timeLeft;
+    setTimer(prev => ({
+      ...prev,
+      isRunning: false,
+      isPaused: true,
+    }));
+  }, [timer.timeLeft]);
+
+  const resumeTimer = useCallback((onComplete: () => void) => {
+    if (timer.isPaused && !userInteractedRef.current && timer.activeStepIndex !== null) {
+      const remainingTime = pausedTimeLeftRef.current * 1000;
+      
+      countdownTimerRef.current = setInterval(() => {
+        setTimer(prev => {
+          if (prev.timeLeft <= 1) {
+            clearInterval(countdownTimerRef.current!);
+            return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
+          }
+          return { ...prev, timeLeft: prev.timeLeft - 1 };
+        });
+      }, 1000);
+      
+      autoContinueTimerRef.current = setTimeout(() => {
+        if (!userInteractedRef.current) {
+          onComplete();
+        }
+      }, remainingTime);
+      
+      setTimer(prev => ({
+        ...prev,
+        isRunning: true,
+        isPaused: false,
+      }));
+    }
+  }, [timer.isPaused, timer.activeStepIndex]);
+
+  const resetTimer = useCallback(() => {
+    if (autoContinueTimerRef.current) {
+      clearTimeout(autoContinueTimerRef.current);
+      autoContinueTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+    setTimer({
+      isRunning: false,
+      isPaused: false,
+      timeLeft: 10,
+      activeStepIndex: null,
+    });
+  }, []);
+
+  const markUserInteraction = useCallback(() => {
+    userInteractedRef.current = true;
+  }, []);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsPlanning(false);
-    }, WORKFLOW_CONFIG.planningDelay);
+    return () => {
+      if (autoContinueTimerRef.current) {
+        clearTimeout(autoContinueTimerRef.current);
+      }
+      if (countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+      }
+    };
+  }, []);
+
+  return {
+    timer,
+    startTimer,
+    stopTimer,
+    resumeTimer,
+    resetTimer,
+    markUserInteraction,
+  };
+};
+
+const useWorkflowData = () => {
+  const [storyOutline, setStoryOutline] = useState<StoryOutlineResponse | null>(null);
+  const [persona, setPersona] = useState<PersonaResponse | null>(null);
+
+  return {
+    storyOutline,
+    persona,
+    setStoryOutline,
+    setPersona,
+  };
+};
+
+const useStepExecution = (
+  steps: WorkflowStep[],
+  currentStepIndex: number,
+  workflowData: ReturnType<typeof useWorkflowData>,
+  onStepComplete: (stepIndex: number) => void,
+  onError: (stepIndex: number, error: string) => void,
+  prompt: string | null,
+  updateStepContent: (stepIndex: number, content: string) => void,
+  config: WorkflowConfig = {}
+) => {
+  const executeStep = useCallback(async (stepIndex: number) => {
+    const step = steps[stepIndex];
+    
+    if (!step) {
+      return;
+    }
+
+    try {
+      switch (stepIndex) {
+        case 0: // Story Outline
+          if (!prompt) {
+            throw new Error('No prompt provided for story outline generation');
+          }
+          const storyOutline = await getStoryOutline(prompt);
+          workflowData.setStoryOutline(storyOutline);
+          
+          updateStepContent(stepIndex, storyOutline.plot_outline);
+          
+          onStepComplete(stepIndex);
+          break;
+
+        case 1: // Persona
+          if (!workflowData.storyOutline) {
+            throw new Error('No story outline data available');
+          }
+          const persona = await getPersona(workflowData.storyOutline);
+          workflowData.setPersona(persona);
+          
+          // Update step content with actual persona data
+          const formattedPersona = Object.values(persona).map((char) =>
+            `**${char.name}**\nAge: ${char.age}\nGender: ${char.gender}\nBackground: ${char.background}\nPersonality Traits: ${char.personality_traits}`
+          ).join('\n\n');
+          updateStepContent(stepIndex, formattedPersona);
+          
+          onStepComplete(stepIndex);
+          break;
+
+        case 2: // Script
+          if (!workflowData.storyOutline || !workflowData.persona) {
+            throw new Error('Missing story outline or persona data');
+          }
+          const language = config.language || 'hindi'; // Default to hindi if not specified
+          const script = await getScript(language, workflowData.storyOutline, workflowData.persona);
+          
+          // Update step content with actual script data
+          const formattedScript = script.script.map((line) =>
+            `**${line.speaker}:** ${line.text}\n_voice: ${line.voice_config.voice_model}, pitch: ${line.voice_config.pitch}, pace: ${line.voice_config.pace}, loudness: ${line.voice_config.loudness}_`
+          ).join('\n\n');
+          updateStepContent(stepIndex, formattedScript);
+          
+          onStepComplete(stepIndex);
+          break;
+
+        default:
+          // Mock streaming for other steps
+          setTimeout(() => onStepComplete(stepIndex), WORKFLOW_CONFIG.completionDelay);
+          break;
+      }
+    } catch (error) {
+      onError(stepIndex, error instanceof Error ? error.message : 'Unknown error');
+    }
+  }, [steps, workflowData, onStepComplete, onError, prompt, updateStepContent, config.language]);
+
+  return { executeStep };
+};
+
+// ============================================================================
+// MAIN HOOK
+// ============================================================================
+
+export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}): UseWorkflowReturn => {
+  const [steps, setSteps] = useState<WorkflowStep[]>(initializeSteps);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [isPlanning, setIsPlanning] = useState(true);
+  const [isWorkflowComplete, setIsWorkflowComplete] = useState(false);
+
+  const workflowData = useWorkflowData();
+  const {
+    timer: autoContinueTimer,
+    startTimer,
+    stopTimer,
+    resumeTimer,
+    resetTimer,
+    markUserInteraction,
+  } = useAutoContinueTimer();
+
+  // ============================================================================
+  // STEP MANAGEMENT
+  // ============================================================================
+
+  const updateStep = useCallback((stepIndex: number, updates: Partial<WorkflowStep>) => {
+    setSteps(prev => prev.map((step, idx) => 
+      idx === stepIndex ? { ...step, ...updates } : step
+    ));
+  }, []);
+
+  const updateStepContent = useCallback((stepIndex: number, content: string) => {
+    setSteps(prev => prev.map((step, idx) => 
+      idx === stepIndex ? { ...step, streamedContent: content } : step
+    ));
+  }, []);
+
+  // ============================================================================
+  // WORKFLOW PROGRESSION
+  // ============================================================================
+
+  const handleContinue = useCallback((indexToContinueFrom: number) => {
+    resetTimer();
+    updateStep(indexToContinueFrom, { isExpanded: false });
+    setCurrentStepIndex(prev => prev + 1);
+  }, [resetTimer, updateStep]);
+
+  const completeStep = useCallback((stepIndex: number) => {
+    updateStep(stepIndex, {
+      status: WORKFLOW_STATUS.COMPLETED,
+      isExpanded: true,
+    });
+
+    if (stepIndex < steps.length - 1) {
+      startTimer(stepIndex, () => handleContinue(stepIndex));
+    } else {
+      setIsWorkflowComplete(true);
+    }
+  }, [steps.length, startTimer, handleContinue, updateStep]);
+
+  const handleStepError = useCallback((stepIndex: number, error: string) => {
+    console.error(`Step ${stepIndex} failed:`, error);
+    
+    updateStep(stepIndex, {
+      streamedContent: `❌ **Error occurred:** ${error}\n\n**Possible solutions:**\n• Check your internet connection\n• Try again with a different prompt\n• Contact support if the issue persists`,
+      status: WORKFLOW_STATUS.COMPLETED,
+      isExpanded: true,
+    });
+    
+    // Don't auto-continue on error, let user decide
+    markUserInteraction();
+    completeStep(stepIndex);
+  }, [updateStep, completeStep, markUserInteraction]);
+
+  const stepExecution = useStepExecution(
+    steps,
+    currentStepIndex,
+    workflowData,
+    completeStep,
+    handleStepError,
+    prompt,
+    updateStepContent,
+    config
+  );
+
+  const handleRetry = useCallback((indexToRetry: number) => {
+    resetTimer();
+    markUserInteraction();
+    setIsWorkflowComplete(false);
+
+    setSteps(prev => prev.map((step, i) => {
+      if (i >= indexToRetry) {
+        return {
+          ...WORKFLOW_STEPS_DATA[i],
+          status: WORKFLOW_STATUS.PENDING,
+          streamedContent: '',
+          isVisible: true,
+          isExpanded: i === indexToRetry,
+        };
+      }
+      return step;
+    }));
+
+    setCurrentStepIndex(indexToRetry);
+  }, [resetTimer, markUserInteraction]);
+
+  // ============================================================================
+  // USER INTERACTIONS
+  // ============================================================================
+
+  const handleToggleExpand = useCallback((indexToToggle: number) => {
+    setSteps(prev => prev.map((step, index) => {
+      if (index === indexToToggle && step.status === WORKFLOW_STATUS.COMPLETED) {
+        return { ...step, isExpanded: !step.isExpanded };
+      }
+      return step;
+    }));
+  }, []);
+
+  const handleImproveClick = useCallback(() => {
+    resetTimer();
+    markUserInteraction();
+  }, [resetTimer, markUserInteraction]);
+
+  const handleImprove = useCallback((indexToImprove: number, feedback: string) => {
+    console.log(`Feedback for step ${indexToImprove} ("${steps[indexToImprove].title}"): ${feedback}`);
+  }, [steps]);
+
+  const handleStopTimer = useCallback(() => {
+    stopTimer();
+  }, [stopTimer]);
+
+  const handleResumeTimer = useCallback(() => {
+    resumeTimer(() => handleContinue(autoContinueTimer.activeStepIndex!));
+  }, [resumeTimer, handleContinue, autoContinueTimer.activeStepIndex]);
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  // Planning phase
+  useEffect(() => {
+    const timer = setTimeout(() => setIsPlanning(false), WORKFLOW_CONFIG.planningDelay);
     return () => clearTimeout(timer);
   }, []);
 
-  // Effect to reveal steps one by one after planning
+  // Step reveal animation
   useEffect(() => {
     if (isPlanning) return;
 
     const interval = setInterval(() => {
-      setSteps((prev) => {
-        const nextInvisibleIndex = prev.findIndex((s) => !s.isVisible);
+      setSteps(prev => {
+        const nextInvisibleIndex = prev.findIndex(s => !s.isVisible);
+        
         if (nextInvisibleIndex !== -1) {
           const newSteps = [...prev];
           newSteps[nextInvisibleIndex].isVisible = true;
@@ -82,497 +433,35 @@ export const useWorkflow = (prompt: string | null): UseWorkflowReturn => {
     return () => clearInterval(interval);
   }, [isPlanning]);
 
-  // Effect to kick off the process for the current step, once it's visible
+  // Step execution
   useEffect(() => {
-    if (isPlanning || !prompt || currentStepIndex >= steps.length) return;
+    if (isPlanning || !prompt || currentStepIndex >= steps.length) {
+      return;
+    }
 
-    const currentStepData = steps[currentStepIndex];
-    if (
-      currentStepData &&
-      currentStepData.isVisible &&
-      currentStepData.status === WORKFLOW_STATUS.PENDING
-    ) {
+    const currentStep = steps[currentStepIndex];
+
+    if (currentStep?.isVisible && currentStep.status === WORKFLOW_STATUS.PENDING) {
       const timer = setTimeout(() => {
-        setSteps((prev) =>
-          prev.map((step, index) =>
-            index === currentStepIndex
-              ? { ...step, status: WORKFLOW_STATUS.IN_PROGRESS, isExpanded: true }
-              : step
-          )
-        );
+        updateStep(currentStepIndex, {
+          status: WORKFLOW_STATUS.IN_PROGRESS,
+          isExpanded: true,
+        });
+        stepExecution.executeStep(currentStepIndex);
       }, WORKFLOW_CONFIG.stepStartDelay);
       return () => clearTimeout(timer);
     }
-  }, [isPlanning, prompt, currentStepIndex, steps]);
+  }, [isPlanning, prompt, currentStepIndex, steps, updateStep, stepExecution]);
 
-  // Effect to handle the streaming animation
-  const statusOfCurrentStep = steps[currentStepIndex]?.status;
-
-
-  useEffect(() => {
-    // Step 1: Story Outline (already implemented above)
-    if (currentStepIndex === 0 && statusOfCurrentStep === WORKFLOW_STATUS.IN_PROGRESS && prompt) {
-      getStoryOutline(prompt)
-        .then((data) => {
-          setStoryOutlineData(data);
-          const formatted = data.plot_outline;
-          setSteps((prev) => prev.map((step, idx) => idx === 0 ? { ...step, streamedContent: formatted } : step));
-        })
-        .catch(() => {
-          setSteps((prev) => prev.map((step, idx) => idx === 0 ? { ...step, streamedContent: 'Error: Failed to fetch story outline.' } : step));
-        })
-        .finally(() => {
-          setTimeout(() => {
-            setSteps((prev) => prev.map((step, idx) => idx === 0 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
-            if (currentStepIndex < steps.length - 1) {
-              userInteractedRef.current = false;
-              setAutoContinueTimer({
-                isRunning: true,
-                isPaused: false,
-                timeLeft: 10,
-                activeStepIndex: currentStepIndex,
-              });
-              pausedTimeLeftRef.current = 10;
-              countdownTimerRef.current = setInterval(() => {
-                setAutoContinueTimer(prev => {
-                  if (prev.timeLeft <= 1) {
-                    clearInterval(countdownTimerRef.current!);
-                    return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-                  }
-                  return { ...prev, timeLeft: prev.timeLeft - 1 };
-                });
-              }, 1000);
-              autoContinueTimerRef.current = setTimeout(() => {
-                if (!userInteractedRef.current) {
-                  handleContinue(currentStepIndex);
-                }
-              }, 10000);
-            } else {
-              setIsWorkflowComplete(true);
-            }
-          }, WORKFLOW_CONFIG.completionDelay);
-        });
-      return;
-    }
-    // Step 2: Persona API integration
-    if (currentStepIndex === 1 && statusOfCurrentStep === WORKFLOW_STATUS.IN_PROGRESS) {
-      // Only proceed if we have the storyline output
-      if (!storyOutlineData) {
-        setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, streamedContent: 'Error: No story outline data available.' } : step));
-        setTimeout(() => {
-          setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
-          if (currentStepIndex < steps.length - 1) {
-            userInteractedRef.current = false;
-            setAutoContinueTimer({
-              isRunning: true,
-              isPaused: false,
-              timeLeft: 10,
-              activeStepIndex: currentStepIndex,
-            });
-            pausedTimeLeftRef.current = 10;
-            countdownTimerRef.current = setInterval(() => {
-              setAutoContinueTimer(prev => {
-                if (prev.timeLeft <= 1) {
-                  clearInterval(countdownTimerRef.current!);
-                  return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-                }
-                return { ...prev, timeLeft: prev.timeLeft - 1 };
-              });
-            }, 1000);
-            autoContinueTimerRef.current = setTimeout(() => {
-              if (!userInteractedRef.current) {
-                handleContinue(currentStepIndex);
-              }
-            }, 10000);
-          } else {
-            setIsWorkflowComplete(true);
-          }
-        }, WORKFLOW_CONFIG.completionDelay);
-        return;
-      }
-      // Show loading state
-      setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, streamedContent: 'Loading character personas...' } : step));
-      import('../lib/api').then(({ getPersona }) => {
-        getPersona(storyOutlineData)
-          .then((personaObj) => {
-            setPersonaData(personaObj); // save the raw persona response
-            // Use correct type for persona characters
-            const formatted = Object.values(personaObj).map((char: import('../lib/api').PersonaCharacter) =>
-              `**${char.name}**\nAge: ${char.age}\nGender: ${char.gender}\nBackground: ${char.background}\nPersonality Traits: ${char.personality_traits}`
-            ).join('\n\n');
-            setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, streamedContent: formatted } : step));
-          })
-          .catch(() => {
-            setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, streamedContent: 'Error: Failed to fetch persona.' } : step));
-          })
-          .finally(() => {
-            setTimeout(() => {
-              setSteps((prev) => prev.map((step, idx) => idx === 1 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
-              if (currentStepIndex < steps.length - 1) {
-                userInteractedRef.current = false;
-                setAutoContinueTimer({
-                  isRunning: true,
-                  isPaused: false,
-                  timeLeft: 10,
-                  activeStepIndex: currentStepIndex,
-                });
-                pausedTimeLeftRef.current = 10;
-                countdownTimerRef.current = setInterval(() => {
-                  setAutoContinueTimer(prev => {
-                    if (prev.timeLeft <= 1) {
-                      clearInterval(countdownTimerRef.current!);
-                      return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-                    }
-                    return { ...prev, timeLeft: prev.timeLeft - 1 };
-                  });
-                }, 1000);
-                autoContinueTimerRef.current = setTimeout(() => {
-                  if (!userInteractedRef.current) {
-                    handleContinue(currentStepIndex);
-                  }
-                }, 10000);
-              } else {
-                setIsWorkflowComplete(true);
-              }
-            }, WORKFLOW_CONFIG.completionDelay);
-          });
-      });
-      return;
-    }
-    // Step 3: Script Generation API integration
-    if (currentStepIndex === 2 && statusOfCurrentStep === WORKFLOW_STATUS.IN_PROGRESS) {
-      // Only proceed if we have the storyline and persona output
-      if (!storyOutlineData || !steps[1].streamedContent) {
-        setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, streamedContent: 'Error: Missing story outline or persona data.' } : step));
-        setTimeout(() => {
-          setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
-          if (currentStepIndex < steps.length - 1) {
-            userInteractedRef.current = false;
-            setAutoContinueTimer({
-              isRunning: true,
-              isPaused: false,
-              timeLeft: 10,
-              activeStepIndex: currentStepIndex,
-            });
-            pausedTimeLeftRef.current = 10;
-            countdownTimerRef.current = setInterval(() => {
-              setAutoContinueTimer(prev => {
-                if (prev.timeLeft <= 1) {
-                  clearInterval(countdownTimerRef.current!);
-                  return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-                }
-                return { ...prev, timeLeft: prev.timeLeft - 1 };
-              });
-            }, 1000);
-            autoContinueTimerRef.current = setTimeout(() => {
-              if (!userInteractedRef.current) {
-                handleContinue(currentStepIndex);
-              }
-            }, 10000);
-          } else {
-            setIsWorkflowComplete(true);
-          }
-        }, WORKFLOW_CONFIG.completionDelay);
-        return;
-      }
-      // Show loading state
-      setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, streamedContent: 'Generating script...' } : step));
-      import('../lib/api').then(({ getScript }) => {
-        // Log the objects being sent to the script API
-        console.log('SCRIPT API CALL INPUT:', {
-          language: 'hindi',
-          story_outline: storyOutlineData,
-          persona: personaData,
-        });
-        // Defensive: if either is missing, show error and their values
-        if (!storyOutlineData || !personaData) {
-          setSteps((prev) => prev.map((step, idx) => idx === 2 ? {
-            ...step,
-            streamedContent: 'Error: Missing data for script API.\n' +
-              'storyOutlineData: ' + JSON.stringify(storyOutlineData, null, 2) + '\n' +
-              'personaData: ' + JSON.stringify(personaData, null, 2)
-          } : step));
-          setTimeout(() => {
-            setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
-          }, WORKFLOW_CONFIG.completionDelay);
-          return;
-        }
-        getScript('hindi', storyOutlineData, personaData)
-          .then((scriptData) => {
-            // Format script output for display
-            const formatted = scriptData.script.map((line) =>
-              `**${line.speaker}:** ${line.text}\n_voice: ${line.voice_config.voice_model}, pitch: ${line.voice_config.pitch}, pace: ${line.voice_config.pace}, loudness: ${line.voice_config.loudness}_`
-            ).join('\n\n');
-            setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, streamedContent: formatted } : step));
-          })
-          .catch(() => {
-            setSteps((prev) => prev.map((step, idx) => idx === 2 ? {
-              ...step,
-              streamedContent: 'Error: Failed to fetch script.\n' +
-                'storyOutlineData: ' + JSON.stringify(storyOutlineData, null, 2) + '\n' +
-                'personaData: ' + JSON.stringify(personaData, null, 2)
-            } : step));
-          })
-          .finally(() => {
-            setTimeout(() => {
-              setSteps((prev) => prev.map((step, idx) => idx === 2 ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true } : step));
-              if (currentStepIndex < steps.length - 1) {
-                userInteractedRef.current = false;
-                setAutoContinueTimer({
-                  isRunning: true,
-                  isPaused: false,
-                  timeLeft: 10,
-                  activeStepIndex: currentStepIndex,
-                });
-                pausedTimeLeftRef.current = 10;
-                countdownTimerRef.current = setInterval(() => {
-                  setAutoContinueTimer(prev => {
-                    if (prev.timeLeft <= 1) {
-                      clearInterval(countdownTimerRef.current!);
-                      return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-                    }
-                    return { ...prev, timeLeft: prev.timeLeft - 1 };
-                  });
-                }, 1000);
-                autoContinueTimerRef.current = setTimeout(() => {
-                  if (!userInteractedRef.current) {
-                    handleContinue(currentStepIndex);
-                  }
-                }, 10000);
-              } else {
-                setIsWorkflowComplete(true);
-              }
-            }, WORKFLOW_CONFIG.completionDelay);
-          });
-      });
-      return;
-    }
-    // For other steps, use the mock streaming animation
-    if (statusOfCurrentStep !== WORKFLOW_STATUS.IN_PROGRESS) return;
-    charIndexRef.current = 0;
-    const contentToStream = WORKFLOW_STEPS_DATA[currentStepIndex].content;
-    const intervalId = setInterval(() => {
-      charIndexRef.current++;
-      const streamedText = contentToStream.slice(0, charIndexRef.current);
-      setSteps((prevSteps) =>
-        prevSteps.map((step, index) =>
-          index === currentStepIndex
-            ? { ...step, streamedContent: streamedText }
-            : step
-        )
-      );
-      if (charIndexRef.current >= contentToStream.length) {
-        clearInterval(intervalId);
-        setTimeout(() => {
-          setSteps((prevSteps) =>
-            prevSteps.map((step, index) =>
-              index === currentStepIndex
-                ? { ...step, status: WORKFLOW_STATUS.COMPLETED, isExpanded: true }
-                : step
-            )
-          );
-          if (currentStepIndex < steps.length - 1) {
-            userInteractedRef.current = false;
-            setAutoContinueTimer({
-              isRunning: true,
-              isPaused: false,
-              timeLeft: 10,
-              activeStepIndex: currentStepIndex,
-            });
-            pausedTimeLeftRef.current = 10;
-            countdownTimerRef.current = setInterval(() => {
-              setAutoContinueTimer(prev => {
-                if (prev.timeLeft <= 1) {
-                  clearInterval(countdownTimerRef.current!);
-                  return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-                }
-                return { ...prev, timeLeft: prev.timeLeft - 1 };
-              });
-            }, 1000);
-            autoContinueTimerRef.current = setTimeout(() => {
-              if (!userInteractedRef.current) {
-                handleContinue(currentStepIndex);
-              }
-            }, 10000);
-          } else {
-            setIsWorkflowComplete(true);
-          }
-        }, WORKFLOW_CONFIG.completionDelay);
-      }
-    }, WORKFLOW_CONFIG.streamingSpeed);
-    return () => clearInterval(intervalId);
-  // Add handleContinue and steps to dependencies as required by exhaustive-deps
-  // Fix exhaustive-deps: useCallback for handleContinue and include it and steps in deps
-  }, [statusOfCurrentStep, currentStepIndex, steps.length, prompt, storyOutlineData, personaData, steps]);
-
-  // Unified handleContinue: advances workflow and manages timers
-  const handleContinue = useCallback((indexToContinueFrom: number) => {
-    // Stop auto-continue timer
-    if (autoContinueTimerRef.current) {
-      clearTimeout(autoContinueTimerRef.current);
-      autoContinueTimerRef.current = null;
-    }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
-    setAutoContinueTimer({
-      isRunning: false,
-      isPaused: false,
-      timeLeft: 10,
-      activeStepIndex: null,
-    });
-    setSteps(prev =>
-      prev.map((step, i) =>
-        i === indexToContinueFrom ? { ...step, isExpanded: false } : step
-      )
-    );
-    setCurrentStepIndex(prev => prev + 1);
-  }, []);
-
-  // Effect to collapse all steps on final completion
-  // (Add handleContinue to dependency array if needed)
+  // Final completion
   useEffect(() => {
     if (isWorkflowComplete) {
       const timer = setTimeout(() => {
-        setSteps(prev => prev.map(s => ({...s, isExpanded: false})));
+        setSteps(prev => prev.map(s => ({ ...s, isExpanded: false })));
       }, WORKFLOW_CONFIG.collapseDelay);
       return () => clearTimeout(timer);
     }
   }, [isWorkflowComplete]);
-
-  const handleToggleExpand = useCallback((indexToToggle: number) => {
-    setSteps(prevSteps =>
-      prevSteps.map((step, index) => {
-        if (index === indexToToggle && step.status === WORKFLOW_STATUS.COMPLETED) {
-          return { ...step, isExpanded: !step.isExpanded };
-        }
-        return step;
-      })
-    );
-  }, []);
-
-  const handleRetry = useCallback((indexToRetry: number) => {
-    // Stop auto-continue timer and mark user interaction
-    if (autoContinueTimerRef.current) {
-      clearTimeout(autoContinueTimerRef.current);
-      autoContinueTimerRef.current = null;
-    }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
-    userInteractedRef.current = true;
-    setAutoContinueTimer({
-      isRunning: false,
-      isPaused: false,
-      timeLeft: 10,
-      activeStepIndex: null,
-    });
-    
-    setIsWorkflowComplete(false);
-    setSteps(prev =>
-      prev.map((step, i) => {
-        if (i >= indexToRetry) {
-          // Reset the retried step and all subsequent steps to pending
-          return { 
-            ...WORKFLOW_STEPS_DATA[i], 
-            status: WORKFLOW_STATUS.PENDING, 
-            streamedContent: '', 
-            isVisible: true, 
-            isExpanded: i === indexToRetry // Only expand the step being retried
-          };
-        }
-        // Keep previous steps as they are
-        return step;
-      })
-    );
-    setCurrentStepIndex(indexToRetry);
-  }, []);
-  
-
-
-  const handleImproveClick = useCallback(() => {
-    // Stop auto-continue timer and mark user interaction when Improve button is clicked
-    if (autoContinueTimerRef.current) {
-      clearTimeout(autoContinueTimerRef.current);
-      autoContinueTimerRef.current = null;
-    }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
-    userInteractedRef.current = true;
-    setAutoContinueTimer({
-      isRunning: false,
-      isPaused: false,
-      timeLeft: 10,
-      activeStepIndex: null,
-    });
-  }, []);
-
-  const handleStopTimer = useCallback(() => {
-    if (autoContinueTimerRef.current) {
-      clearTimeout(autoContinueTimerRef.current);
-      autoContinueTimerRef.current = null;
-    }
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current);
-      countdownTimerRef.current = null;
-    }
-    pausedTimeLeftRef.current = autoContinueTimer.timeLeft;
-    setAutoContinueTimer(prev => ({
-      ...prev,
-      isRunning: false,
-      isPaused: true,
-    }));
-  }, [autoContinueTimer.timeLeft]);
-
-  const handleResumeTimer = useCallback(() => {
-    if (autoContinueTimer.isPaused && !userInteractedRef.current && autoContinueTimer.activeStepIndex !== null) {
-      const remainingTime = pausedTimeLeftRef.current * 1000;
-      
-      // Start countdown timer
-      countdownTimerRef.current = setInterval(() => {
-        setAutoContinueTimer(prev => {
-          if (prev.timeLeft <= 1) {
-            clearInterval(countdownTimerRef.current!);
-            return { ...prev, isRunning: false, timeLeft: 0, activeStepIndex: null };
-          }
-          return { ...prev, timeLeft: prev.timeLeft - 1 };
-        });
-      }, 1000);
-      
-      autoContinueTimerRef.current = setTimeout(() => {
-        if (!userInteractedRef.current) {
-          handleContinue(autoContinueTimer.activeStepIndex!);
-        }
-      }, remainingTime);
-      
-      setAutoContinueTimer(prev => ({
-        ...prev,
-        isRunning: true,
-        isPaused: false,
-      }));
-    }
-  }, [autoContinueTimer.isPaused, autoContinueTimer.activeStepIndex]);
-
-  const handleImprove = useCallback((indexToImprove: number, feedback: string) => {
-    console.log(`Feedback for step ${indexToImprove} ("${steps[indexToImprove].title}"): ${feedback}`);
-    // Here you could add logic to re-run the step with the new feedback
-  }, [steps]);
-
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => {
-      if (autoContinueTimerRef.current) {
-        clearTimeout(autoContinueTimerRef.current);
-      }
-      if (countdownTimerRef.current) {
-        clearInterval(countdownTimerRef.current);
-      }
-    };
-  }, []);
 
   return {
     steps,
