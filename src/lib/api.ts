@@ -52,6 +52,16 @@ export interface AudioResponse {
   audio_url: string;
 }
 
+export interface MetadataResponse {
+  title: string;
+  description: string;
+}
+
+export interface ThumbnailResponse {
+  imageBase64: string;
+  textResponse?: string;
+}
+
 // ============================================================================
 // API CONFIGURATION
 // ============================================================================
@@ -179,6 +189,60 @@ export async function getAudio(language: string, script: ScriptLine[], persona: 
   console.log(data);
   return {
     audio_url: getAudioURL(API_BASE_URL, data.audio_path),
+  };
+}
+
+/**
+ * Generates metadata (title and description) from storyline
+ */
+export async function getMetadata(storyline: string): Promise<MetadataResponse> {
+  const response = await fetch('/api/generate-metadata', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ storyline }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to generate metadata');
+  }
+
+  const data = await response.json();
+  return {
+    title: data.title,
+    description: data.description,
+  };
+}
+
+/**
+ * Generates thumbnail image from storyline
+ */
+export async function getThumbnail(storyline: string, setting: string = '', style: string = ''): Promise<ThumbnailResponse> {
+  const promptData = {
+    plot_outline: storyline,
+    setting: setting || 'General setting',
+    style: style || 'Children\'s book illustration style'
+  };
+
+  const response = await fetch('/api/generate-image', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ 
+      prompt: JSON.stringify(promptData)
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to generate thumbnail');
+  }
+
+  const data = await response.json();
+  return {
+    imageBase64: data.imageBase64,
+    textResponse: data.textResponse,
   };
 }
 

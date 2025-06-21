@@ -26,6 +26,9 @@ export default function ChatPage() {
     handleStopTimer,
     handleResumeTimer,
     audioUrl,
+    metadata,
+    thumbnail,
+    isWorkflowComplete,
   } = useWorkflow(prompt, { language });
 
   useEffect(() => {
@@ -82,7 +85,12 @@ export default function ChatPage() {
                   onResumeTimer={handleResumeTimer}
                 />
               ))}
-              {audioUrl && <AudioPlayer title={"Episode 1"} description={"Listen to the generated episode"} audioUrl={audioUrl} thumbnailUrl={"https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} />}
+              {audioUrl && isWorkflowComplete && <AudioPlayer 
+                title={metadata?.title || "Your Audio Story"} 
+                description={metadata?.description || "Listen to the generated episode"} 
+                audioUrl={audioUrl} 
+                thumbnailUrl={thumbnail || "https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} 
+              />}
             </div>
           )}
         </div>

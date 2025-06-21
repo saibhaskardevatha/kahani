@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import React, { useState, useRef, useEffect } from "react";
 
 // Define Props for the component
@@ -114,7 +115,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
       <div className="bg-white rounded-lg border border-slate-200/80 shadow-sm flex overflow-hidden">
         {/* Left: Thumbnail */}
-        <div className="w-32 md:w-40 h-auto bg-slate-100 flex-shrink-0">
+        <div className="w-64 md:w-64 h-auto bg-slate-100 flex-shrink-0">
           <img
             src={thumbnailUrl}
             alt="Episode thumbnail"
@@ -143,7 +144,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
                 <h3 className="text-lg font-bold text-slate-800 truncate">
                   {title}
                 </h3>
-                <p className="text-sm text-slate-500 truncate">{description}</p>
+                <p 
+                  className="text-sm text-slate-500 max-w-[500px]"
+                  title={description}
+                >
+                  {description}
+                </p>
               </div>
               <button
                 onClick={handleDownload}
@@ -186,11 +192,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4 mt-4 justify-center">
+          <div className="flex items-center gap-3 sm:gap-4 mt-8 justify-center">
             <button
               onClick={handlePlayPause}
               disabled={!audioUrl}
-              className="cursor-pointer w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center flex-shrink-0 shadow-sm hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="transform -translate-y-2 cursor-pointer w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center flex-shrink-0 shadow-sm hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label={isPlaying ? "Pause" : "Play"}
             >
               {isPlaying ? (

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WorkflowStep, WorkflowStepData } from '../types/chat';
 import { WORKFLOW_STEPS_DATA, WORKFLOW_CONFIG, WORKFLOW_STATUS } from '../constants/workflow';
-import { getStoryOutline, getPersona, getScript, getAudio, StoryOutlineResponse, PersonaResponse, ScriptResponse } from '../lib/api';
+import { getStoryOutline, getPersona, getScript, getAudio, getMetadata, getThumbnail, StoryOutlineResponse, PersonaResponse, ScriptResponse } from '../lib/api';
 
 // ============================================================================
 // TYPES
@@ -21,6 +21,8 @@ interface UseWorkflowReturn {
   handleStopTimer: () => void;
   handleResumeTimer: () => void;
   audioUrl: string | null;
+  metadata: { title: string; description: string } | null;
+  thumbnail: string | null;
 }
 
 interface AutoContinueTimer {
@@ -201,6 +203,8 @@ const useStepExecution = (
   onDataReceived: (stepIndex: number, fullText: string) => void,
   onError: (stepIndex: number, error: string) => void,
   onAudioReady: (audioUrl: string) => void,
+  onMetadataReady: (metadata: { title: string; description: string }) => void,
+  onThumbnailReady: (thumbnail: string) => void,
   prompt: string | null,
   config: WorkflowConfig = {}
 ) => {
@@ -249,15 +253,27 @@ const useStepExecution = (
           onDataReceived(stepIndex, formattedScript);
           break;
 
-        case 3: // Audio
+        case 3: // Audio + Metadata + Thumbnail
           if (!workflowData.script) {
             throw new Error('Script data not available for audio generation.');
           }
           if (!workflowData.persona) {
             throw new Error('Persona data not available for audio generation.');
           }
-          const audio = await getAudio(config.language || 'hindi', workflowData.script.script, workflowData.persona);
+          if (!workflowData.storyOutline) {
+            throw new Error('Story outline data not available for metadata generation.');
+          }
+
+          // Generate audio, metadata, and thumbnail in parallel
+          const [audio, metadata, thumbnail] = await Promise.all([
+            getAudio(config.language || 'hindi', workflowData.script.script, workflowData.persona),
+            getMetadata(workflowData.storyOutline.plot_outline),
+            getThumbnail(workflowData.storyOutline.plot_outline, workflowData.storyOutline.setting, workflowData.storyOutline.style)
+          ]);
+
           onAudioReady(audio.audio_url);
+          onMetadataReady(metadata);
+          onThumbnailReady(`data:image/png;base64,${thumbnail.imageBase64}`);
           onDataReceived(stepIndex, WORKFLOW_STEPS_DATA[stepIndex].content);
           break;
 
@@ -269,7 +285,7 @@ const useStepExecution = (
     } catch (error) {
       onError(stepIndex, error instanceof Error ? error.message : 'Unknown error');
     }
-  }, [steps, workflowData, onDataReceived, onError, onAudioReady, prompt, config.language]);
+  }, [steps, workflowData, onDataReceived, onError, onAudioReady, onMetadataReady, onThumbnailReady, prompt, config.language]);
 
   return { executeStep };
 };
@@ -284,6 +300,8 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
   const [isPlanning, setIsPlanning] = useState(true);
   const [isWorkflowComplete, setIsWorkflowComplete] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [metadata, setMetadata] = useState<{ title: string; description: string } | null>(null);
+  const [thumbnail, setThumbnail] = useState<string | null>(null);
 
   const workflowData = useWorkflowData();
   const {
@@ -403,6 +421,8 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     onDataReceived,
     handleStepError,
     setAudioUrl,
+    setMetadata,
+    setThumbnail,
     prompt,
     config
   );
@@ -547,5 +567,7 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     handleStopTimer,
     handleResumeTimer,
     audioUrl,
+    metadata,
+    thumbnail,
   };
 }; 
