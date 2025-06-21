@@ -174,11 +174,11 @@ export async function getScript(
 /**
  * Fetches audio based on script
  */
-export async function getAudio(script: ScriptResponse): Promise<AudioResponse> {
-  const data = await apiClient.post<{ audio_url: string }>("/audio", script);
-  
+export async function getAudio(language: string, script: ScriptLine[], persona: PersonaResponse): Promise<AudioResponse> {
+  const data = await apiClient.post<{ audio_path: string }>("/voice", { language: language.toLowerCase(), script, persona });
+  console.log(data);
   return {
-    audio_url: getAudioURL(API_BASE_URL, data.audio_url),
+    audio_url: getAudioURL(API_BASE_URL, data.audio_path),
   };
 }
 
@@ -201,7 +201,7 @@ export async function generateCompleteStory(userInput: string, language: string)
     const script = await getScript(language, storyOutline, persona);
     
     // Step 4: Generate audio
-    const audio = await getAudio(script);
+    const audio = await getAudio(language, script.script, persona);
     
     return {
       storyOutline,

@@ -17,7 +17,6 @@ export default function ChatPage() {
   const {
     steps,
     isPlanning,
-    isWorkflowComplete,
     autoContinueTimer,
     handleToggleExpand,
     handleRetry,
@@ -26,6 +25,7 @@ export default function ChatPage() {
     handleImproveClick,
     handleStopTimer,
     handleResumeTimer,
+    audioUrl,
   } = useWorkflow(prompt, { language });
 
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function ChatPage() {
                   onResumeTimer={handleResumeTimer}
                 />
               ))}
-              {isWorkflowComplete && <AudioPlayer title={"Episode 1"} description={"Listen to the generated episode"} audioUrl={"http://codeskulptor-demos.commondatastorage.googleapis.com/GalaxyInvaders/theme_01.mp3"} thumbnailUrl={"https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} />}
+              {audioUrl && <AudioPlayer title={"Episode 1"} description={"Listen to the generated episode"} audioUrl={audioUrl} thumbnailUrl={"https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} />}
             </div>
           )}
         </div>

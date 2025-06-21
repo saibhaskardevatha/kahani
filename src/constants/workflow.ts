@@ -2,20 +2,52 @@ import { WorkflowStepData } from '../types/chat';
 
 export const WORKFLOW_STEPS_DATA: WorkflowStepData[] = [
   {
-    title: "Creating Story Outline",
-    content: `Based on your prompt, we're building a narrative structure. The story will begin with the initial discovery, introduce a central conflict with a **rival organization**, and build towards a climactic confrontation. Key scenes will include a chase through a bustling market, a moment of betrayal, and the final puzzle-solving sequence in a **hidden chamber**.`,
+    title: "Story Outline",
+    content: `🎬 *Cue dramatic music* \n\nPlotting the next blockbuster...\n\n🎭 "In a world where..." (let me think of something epic)\n\n📝 Crafting the perfect story arc that will make audiences go "WOW!"\n\n🌟 This is going to be bigger than Avengers, more emotional than Titanic, and funnier than The Office!\n\n⏳ Just a few more plot twists and character motivations...`,
+    loaderContent: [
+      "🎬 Plotting the next blockbuster...",
+      "🎭 Crafting an epic story arc...",
+      "📝 Weaving plot threads like a master storyteller...",
+      "🌟 Creating a tale that will define a generation...",
+      "🎪 Building the perfect narrative foundation...",
+      "⏳ Assembling plot twists and character motivations..."
+    ],
   },
   {
-    title: "Generating Characters",
-    content: `1. **Protagonist:** A brilliant but reckless adventurer, driven by a personal connection to the central mystery.\n2. **Ally:** A cautious and knowledgeable local expert who provides crucial guidance and acts as a moral compass.\n3. **Antagonist:** A ruthless and well-funded collector who seeks the prize for their own nefarious purposes.`,
+    title: "Characters",
+    content: `🎭 *Character creation mode activated*\n\n🎪 "It's showtime!" - Creating characters that will steal the show\n\n🎨 Designing protagonists with more depth than a Christopher Nolan film\n\n🤖 Building antagonists so compelling, you'll almost root for them (almost!)\n\n🎪 Adding supporting characters that will have their own fan clubs\n\n🌟 These characters will be more memorable than your favorite childhood cartoon!`,
+    loaderContent: [
+      "🎭 Creating characters that will steal the show...",
+      "🎨 Designing protagonists with cinematic depth...",
+      "🤖 Building compelling antagonists...",
+      "🎪 Adding supporting characters with their own fan clubs...",
+      "🌟 Crafting characters more memorable than childhood cartoons...",
+      "⏳ Breathing life into legendary personalities..."
+    ],
   },
   {
-    title: "Generating Script for the Story",
-    content: `**SCENE 1: THE DISCOVERY**\nAn ancient map is found, hinting at a legendary artifact. Our hero is introduced, along with their motivations.\n\n**SCENE 2: THE CONFLICT**\nThe antagonist learns of the discovery and sets their plan in motion, creating the first obstacle.\n\n**SCENE 3: THE CLIMAX**\nBoth parties converge at the final location. A battle of wits and will ensues, with the fate of the artifact hanging in the balance.`,
+    title: "Narrative",
+    content: `📖 *Story weaving in progress*\n\n🎪 "Once upon a time..." (but make it epic)\n\n🎬 Crafting scenes that will make Spielberg proud\n\n🎭 Building tension like a Hitchcock thriller\n\n🌟 Creating moments that will be quoted for generations\n\n🎪 This narrative will have more twists than a pretzel factory!\n\n⏳ Assembling the perfect story structure...`,
+    loaderContent: [
+      "📖 Weaving an epic narrative tapestry...",
+      "🎬 Crafting scenes that will make Spielberg proud...",
+      "🎭 Building tension like a Hitchcock thriller...",
+      "🌟 Creating moments that will be quoted for generations...",
+      "🎪 Adding more twists than a pretzel factory...",
+      "⏳ Assembling the perfect story structure..."
+    ],
   },
   {
-    title: "Generating Audios",
+    title: "Audio Assets",
     content: `[INFO] Generating ambient soundscapes...\n[INFO] Synthesizing character voices...\n[INFO] Composing original score...\n[SUCCESS] Audio assets generated. Mixing and mastering in progress...\n[COMPLETE] Your immersive audio experience is ready.`,
+    loaderContent: [
+      "🎵 Composing the soundtrack of your dreams...",
+      "🎤 Synthesizing voices smoother than butter...",
+      "🎧 Mixing audio so crisp you'll hear every detail...",
+      "🎪 Creating sound effects that make speakers dance...",
+      "🌟 Building immersive audio that transports you...",
+      "⏳ Final audio touches and mastering..."
+    ],
   },
 ];
 
@@ -23,7 +55,7 @@ export const WORKFLOW_CONFIG = {
   planningDelay: 1000,
   stepRevealDelay: 200,
   stepStartDelay: 300,
-  streamingSpeed: 30,
+  streamingSpeed: 10,
   completionDelay: 300,
   collapseDelay: 1000,
 } as const;

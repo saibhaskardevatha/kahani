@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WorkflowStep, WorkflowStepData } from '../types/chat';
 import { WORKFLOW_STEPS_DATA, WORKFLOW_CONFIG, WORKFLOW_STATUS } from '../constants/workflow';
-import { getStoryOutline, getPersona, getScript, StoryOutlineResponse, PersonaResponse } from '../lib/api';
+import { getStoryOutline, getPersona, getScript, getAudio, StoryOutlineResponse, PersonaResponse, ScriptResponse } from '../lib/api';
 
 // ============================================================================
 // TYPES
@@ -20,6 +20,7 @@ interface UseWorkflowReturn {
   handleImproveClick: (indexToImprove: number) => void;
   handleStopTimer: () => void;
   handleResumeTimer: () => void;
+  audioUrl: string | null;
 }
 
 interface AutoContinueTimer {
@@ -55,13 +56,13 @@ const useAutoContinueTimer = () => {
   const [timer, setTimer] = useState<AutoContinueTimer>({
     isRunning: false,
     isPaused: false,
-    timeLeft: 10,
+    timeLeft: 5,
     activeStepIndex: null,
   });
 
   const autoContinueTimerRef = useRef<NodeJS.Timeout | null>(null);
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const pausedTimeLeftRef = useRef(10);
+  const pausedTimeLeftRef = useRef(5);
   const userInteractedRef = useRef(false);
 
   const startTimer = useCallback((stepIndex: number, onComplete: () => void) => {
@@ -69,10 +70,10 @@ const useAutoContinueTimer = () => {
     setTimer({
       isRunning: true,
       isPaused: false,
-      timeLeft: 10,
+      timeLeft: 5,
       activeStepIndex: stepIndex,
     });
-    pausedTimeLeftRef.current = 10;
+    pausedTimeLeftRef.current = 5;
 
     countdownTimerRef.current = setInterval(() => {
       setTimer(prev => {
@@ -88,7 +89,7 @@ const useAutoContinueTimer = () => {
       if (!userInteractedRef.current) {
         onComplete();
       }
-    }, 10000);
+    }, 5000);
   }, []);
 
   const stopTimer = useCallback(() => {
@@ -148,7 +149,7 @@ const useAutoContinueTimer = () => {
     setTimer({
       isRunning: false,
       isPaused: false,
-      timeLeft: 10,
+      timeLeft: 5,
       activeStepIndex: null,
     });
   }, []);
@@ -181,12 +182,15 @@ const useAutoContinueTimer = () => {
 const useWorkflowData = () => {
   const [storyOutline, setStoryOutline] = useState<StoryOutlineResponse | null>(null);
   const [persona, setPersona] = useState<PersonaResponse | null>(null);
+  const [script, setScript] = useState<ScriptResponse | null>(null);
 
   return {
     storyOutline,
     persona,
+    script,
     setStoryOutline,
     setPersona,
+    setScript,
   };
 };
 
@@ -194,10 +198,10 @@ const useStepExecution = (
   steps: WorkflowStep[],
   currentStepIndex: number,
   workflowData: ReturnType<typeof useWorkflowData>,
-  onStepComplete: (stepIndex: number) => void,
+  onDataReceived: (stepIndex: number, fullText: string) => void,
   onError: (stepIndex: number, error: string) => void,
+  onAudioReady: (audioUrl: string) => void,
   prompt: string | null,
-  updateStepContent: (stepIndex: number, content: string) => void,
   config: WorkflowConfig = {}
 ) => {
   const executeStep = useCallback(async (stepIndex: number) => {
@@ -215,10 +219,7 @@ const useStepExecution = (
           }
           const storyOutline = await getStoryOutline(prompt);
           workflowData.setStoryOutline(storyOutline);
-          
-          updateStepContent(stepIndex, storyOutline.plot_outline);
-          
-          onStepComplete(stepIndex);
+          onDataReceived(stepIndex, storyOutline.plot_outline);
           break;
 
         case 1: // Persona
@@ -228,13 +229,10 @@ const useStepExecution = (
           const persona = await getPersona(workflowData.storyOutline);
           workflowData.setPersona(persona);
           
-          // Update step content with actual persona data
           const formattedPersona = Object.values(persona).map((char) =>
             `**${char.name}**\nAge: ${char.age}\nGender: ${char.gender}\nBackground: ${char.background}\nPersonality Traits: ${char.personality_traits}`
           ).join('\n\n');
-          updateStepContent(stepIndex, formattedPersona);
-          
-          onStepComplete(stepIndex);
+          onDataReceived(stepIndex, formattedPersona);
           break;
 
         case 2: // Script
@@ -243,25 +241,35 @@ const useStepExecution = (
           }
           const language = config.language || 'hindi'; // Default to hindi if not specified
           const script = await getScript(language, workflowData.storyOutline, workflowData.persona);
+          workflowData.setScript(script);
           
-          // Update step content with actual script data
           const formattedScript = script.script.map((line) =>
-            `**${line.speaker}:** ${line.text}\n_voice: ${line.voice_config.voice_model}, pitch: ${line.voice_config.pitch}, pace: ${line.voice_config.pace}, loudness: ${line.voice_config.loudness}_`
-          ).join('\n\n');
-          updateStepContent(stepIndex, formattedScript);
-          
-          onStepComplete(stepIndex);
+            `**${line.speaker}:** ${line.text}\n`
+          ).join('\n');
+          onDataReceived(stepIndex, formattedScript);
+          break;
+
+        case 3: // Audio
+          if (!workflowData.script) {
+            throw new Error('Script data not available for audio generation.');
+          }
+          if (!workflowData.persona) {
+            throw new Error('Persona data not available for audio generation.');
+          }
+          const audio = await getAudio(config.language || 'hindi', workflowData.script.script, workflowData.persona);
+          onAudioReady(audio.audio_url);
+          onDataReceived(stepIndex, WORKFLOW_STEPS_DATA[stepIndex].content);
           break;
 
         default:
-          // Mock streaming for other steps
-          setTimeout(() => onStepComplete(stepIndex), WORKFLOW_CONFIG.completionDelay);
+          // For non-API steps, we can just use the default content
+          onDataReceived(stepIndex, WORKFLOW_STEPS_DATA[stepIndex].content);
           break;
       }
     } catch (error) {
       onError(stepIndex, error instanceof Error ? error.message : 'Unknown error');
     }
-  }, [steps, workflowData, onStepComplete, onError, prompt, updateStepContent, config.language]);
+  }, [steps, workflowData, onDataReceived, onError, onAudioReady, prompt, config.language]);
 
   return { executeStep };
 };
@@ -275,6 +283,7 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isPlanning, setIsPlanning] = useState(true);
   const [isWorkflowComplete, setIsWorkflowComplete] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const workflowData = useWorkflowData();
   const {
@@ -285,6 +294,8 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     resetTimer,
     markUserInteraction,
   } = useAutoContinueTimer();
+  
+  const streamIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // ============================================================================
   // STEP MANAGEMENT
@@ -293,12 +304,6 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
   const updateStep = useCallback((stepIndex: number, updates: Partial<WorkflowStep>) => {
     setSteps(prev => prev.map((step, idx) => 
       idx === stepIndex ? { ...step, ...updates } : step
-    ));
-  }, []);
-
-  const updateStepContent = useCallback((stepIndex: number, content: string) => {
-    setSteps(prev => prev.map((step, idx) => 
-      idx === stepIndex ? { ...step, streamedContent: content } : step
     ));
   }, []);
 
@@ -324,6 +329,32 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
       setIsWorkflowComplete(true);
     }
   }, [steps.length, startTimer, handleContinue, updateStep]);
+  
+  const onDataReceived = useCallback((stepIndex: number, fullText: string) => {
+    if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+    }
+
+    updateStep(stepIndex, { streamedContent: '' });
+
+    const startTime = Date.now();
+    const streamingSpeed = WORKFLOW_CONFIG.streamingSpeed;
+
+    streamIntervalRef.current = setInterval(() => {
+      const elapsedTime = Date.now() - startTime;
+      const charsToShow = Math.floor(elapsedTime / streamingSpeed);
+
+      if (charsToShow >= fullText.length) {
+        clearInterval(streamIntervalRef.current!);
+        streamIntervalRef.current = null;
+        updateStep(stepIndex, { streamedContent: fullText });
+        completeStep(stepIndex);
+        return;
+      }
+
+      updateStep(stepIndex, { streamedContent: fullText.slice(0, charsToShow) });
+    }, 40); // Update roughly 25 times per second
+  }, [completeStep, updateStep]);
 
   const handleStepError = useCallback((stepIndex: number, error: string) => {
     console.error(`Step ${stepIndex} failed:`, error);
@@ -343,10 +374,10 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     steps,
     currentStepIndex,
     workflowData,
-    completeStep,
+    onDataReceived,
     handleStepError,
+    setAudioUrl,
     prompt,
-    updateStepContent,
     config
   );
 
@@ -446,12 +477,22 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
         updateStep(currentStepIndex, {
           status: WORKFLOW_STATUS.IN_PROGRESS,
           isExpanded: true,
+          streamedContent: currentStep.loaderContent[Math.floor(Math.random() * currentStep.loaderContent.length)],
         });
         stepExecution.executeStep(currentStepIndex);
       }, WORKFLOW_CONFIG.stepStartDelay);
       return () => clearTimeout(timer);
     }
   }, [isPlanning, prompt, currentStepIndex, steps, updateStep, stepExecution]);
+
+  // Final cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) {
+        clearInterval(streamIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Final completion
   useEffect(() => {
@@ -476,5 +517,6 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     handleImproveClick,
     handleStopTimer,
     handleResumeTimer,
+    audioUrl,
   };
 }; 
