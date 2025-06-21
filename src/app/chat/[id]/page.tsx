@@ -298,7 +298,7 @@ const AudioPlayer = () => {
         <div className="flex items-center gap-4">
           <AudioWaveform isPlaying={isPlaying} />
           <button
-            className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
+            className="cursor-pointer p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors"
             title="Download Audios"
           >
             <svg
@@ -430,7 +430,7 @@ export default function ChatPage() {
     }, 30);
 
     return () => clearInterval(intervalId);
-  }, [statusOfCurrentStep, currentStepIndex]);
+  }, [statusOfCurrentStep, currentStepIndex, steps.length]);
 
   // Effect to collapse all steps on final completion
   useEffect(() => {
@@ -492,7 +492,12 @@ export default function ChatPage() {
     <div className="min-h-screen bg-white dark:bg-slate-900 font-[family-name:var(--font-geist-sans)]">
       <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
         <div className="container mx-auto px-4 py-3 max-w-4xl flex items-center justify-between">
-          <p className="text-lg font-bold text-slate-900 dark:text-white">Warpspeed FM</p>
+          <button
+            onClick={() => router.push("/")}
+            className="text-lg font-bold text-slate-900 dark:text-white cursor-pointer"
+          >
+            Warpspeed FM
+          </button>
           <button
             onClick={() => router.push("/")}
             className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex-shrink-0"
