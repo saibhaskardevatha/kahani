@@ -128,7 +128,7 @@ We welcome contributions! Here's how you can help:
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/your-username/kahani.git
+   git clone https://github.com/saibhaskardevatha/kahani.git
    ```
 
 2. **Create a feature branch**
