@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { WorkflowStep } from "@/components/chat/WorkflowStep";
 import { AudioPlayer } from "@/components/chat/AudioPlayer";
@@ -31,12 +31,18 @@ export default function ChatPage() {
     isWorkflowComplete,
   } = useWorkflow(prompt, { language });
 
+  const bottomRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const debugInfo = document.querySelector('#debug-info');
     if (debugInfo) {
       debugInfo.remove();
     }
   }, []);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [steps, isWorkflowComplete]);
 
   return (
     <div className="min-h-screen bg-white font-[family-name:var(--font-geist-sans)]">
@@ -91,6 +97,7 @@ export default function ChatPage() {
                 audioUrl={audioUrl} 
                 thumbnailUrl={thumbnail || "https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} 
               />}
+              <div ref={bottomRef} />
             </div>
           )}
         </div>
