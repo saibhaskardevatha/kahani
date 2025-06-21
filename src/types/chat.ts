@@ -1,6 +1,7 @@
 export interface WorkflowStep {
   title: string;
   content: string;
+  loaderContent: string[];
   status: 'pending' | 'in-progress' | 'completed';
   streamedContent: string;
   isExpanded: boolean;
@@ -10,6 +11,7 @@ export interface WorkflowStep {
 export interface WorkflowStepData {
   title: string;
   content: string;
+  loaderContent: string[];
 }
 
 export interface WorkflowStepProps {
