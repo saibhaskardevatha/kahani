@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [showTips, setShowTips] = useState(false);
+  const router = useRouter();
 
   const suggestions = [
     "A time traveler wakes up in 1920s Paris with no memory, only to discover they're being hunted by a mysterious organization that knows their future",
@@ -25,12 +27,13 @@ export default function Home() {
   };
 
   const handleGenerate = () => {
-    // Handle generate action here
-    console.log("Generating response for:", prompt);
+    if (!prompt.trim()) return;
+    const id = Math.random().toString(36).substring(7);
+    router.push(`/chat/${id}?prompt=${encodeURIComponent(prompt)}`);
   };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-2xl">
         {/* Header */}
         <div className="text-center">
