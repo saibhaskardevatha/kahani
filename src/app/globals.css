@@ -145,4 +145,53 @@
   }
 }
 
+/* Custom slider styles for audio player */
+.audio-progress {
+  background-image: linear-gradient(to right, #1D4ED8, #1D4ED8);
+  background-repeat: no-repeat;
+}
+
+.audio-progress::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1D4ED8;
+  cursor: pointer;
+  margin-top: -3px; /* Corrected value to perfectly center the 14px thumb on a 6px track */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.audio-progress::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1D4ED8;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.audio-progress::-ms-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #1D4ED8;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Base styling for the track */
+input[type="range"].audio-progress {
+  -webkit-appearance: none;
+  appearance: none;
+
+  width: 100%;
+}
+
+input[type="range"].audio-progress:focus {
+  outline: none;
+}
+
 

@@ -75,7 +75,7 @@ export default function ChatPage() {
                   onResumeTimer={handleResumeTimer}
                 />
               ))}
-              {isWorkflowComplete && <AudioPlayer />}
+              {isWorkflowComplete && <AudioPlayer title={"Episode 1"} description={"Listen to the generated episode"} audioUrl={"http://codeskulptor-demos.commondatastorage.googleapis.com/GalaxyInvaders/theme_01.mp3"} thumbnailUrl={"https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} />}
             </div>
           )}
         </div>
