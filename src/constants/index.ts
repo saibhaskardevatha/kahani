@@ -64,7 +64,7 @@ export const TIPS: Tip[] = [
 export const DEFAULT_LANGUAGE = "Hindi";
 
 export const APP_CONFIG = {
-  title: "Warpspeed FM",
+  title: "Kahani",
   description: "Share your story idea and we'll transform it into an immersive audio experience",
   placeholder: "What is your story line?",
   createButtonText: "Create",
