@@ -96,15 +96,20 @@ class APIClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    timeout: number = 120000 // 2-minute default timeout
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
     const defaultOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",
         ...options.headers,
       },
+      signal: controller.signal,
     };
 
     const config = { ...defaultOptions, ...options };
@@ -122,6 +127,9 @@ class APIClient {
 
       return await response.json();
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw new APIError(`Request timed out after ${timeout / 1000} seconds`, 408, endpoint);
+      }
       if (error instanceof APIError) {
         throw error;
       }
@@ -131,14 +139,20 @@ class APIClient {
         undefined,
         endpoint
       );
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
-  async post<T>(endpoint: string, data: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  async post<T>(endpoint: string, data: unknown, timeout?: number): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+      },
+      timeout
+    );
   }
 }
 
@@ -185,7 +199,12 @@ export async function getScript(
  * Fetches audio based on script
  */
 export async function getAudio(language: string, script: ScriptLine[], persona: PersonaResponse): Promise<AudioResponse> {
-  const data = await apiClient.post<{ audio_path: string }>("/voice", { language: language.toLowerCase(), script, persona });
+  const fiveMinuteTimeout = 300000;
+  const data = await apiClient.post<{ audio_path: string }>(
+    "/voice",
+    { language: language.toLowerCase(), script, persona },
+    fiveMinuteTimeout
+  );
   console.log(data);
   return {
     audio_url: getAudioURL(API_BASE_URL, data.audio_path),

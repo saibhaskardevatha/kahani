@@ -17,6 +17,7 @@ export default function Home() {
   const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LANGUAGE);
   const [selectedDuration, setSelectedDuration] = useState(DEFAULT_DURATION);
   const [error, setError] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
 
   const handleSuggestionClick = useCallback((suggestion: string) => {
@@ -33,7 +34,7 @@ export default function Home() {
   }, []);
 
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     const validation = validatePrompt(prompt);
     
     if (!validation.isValid) {
@@ -42,9 +43,34 @@ export default function Home() {
     }
 
     setError(null);
-    const id = generateChatId();
-    const url = buildChatUrl(id, prompt, selectedLanguage, selectedDuration);
-    router.push(url);
+    setIsChecking(true);
+
+    try {
+      const response = await fetch('/api/check-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+
+      if (data.blocked) {
+        setError(`Input blocked. Please try again.`);
+        return;
+      }
+
+      const id = generateChatId();
+      const url = buildChatUrl(id, prompt, selectedLanguage, selectedDuration);
+      router.push(url);
+
+    } catch (apiError) {
+      console.error(apiError);
+      setError("Failed to validate your storyline. Please try again.");
+    } finally {
+      setIsChecking(false);
+    }
   }, [prompt, selectedLanguage, selectedDuration, router]);
 
   const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -116,11 +142,11 @@ export default function Home() {
               
               <button
                 onClick={handleGenerate}
-                disabled={!prompt.trim()}
+                disabled={!prompt.trim() || isChecking}
                 className="rounded-md flex items-center justify-center bg-black text-white gap-2 font-semibold text-sm h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:shadow-lg transition-shadow"
                 aria-label="Create audio story"
               >
-                {APP_CONFIG.createButtonText}
+                {isChecking ? "Checking..." : APP_CONFIG.createButtonText}
                 <SparklesIcon />
               </button>
             </div>
