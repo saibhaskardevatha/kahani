@@ -29,6 +29,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
   const handleImproveSubmit = (feedback: string) => {
     onImprove(feedback);
     setIsFeedbackVisible(false);
+    onRetry();
   };
 
   const handleToggleFeedback = () => {

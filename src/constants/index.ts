@@ -42,16 +42,16 @@ export const KA_VARIATIONS = [
 
 export const SUGGESTIONS: Suggestion[] = [
   {
-    id: "time-traveler",
-    text: "A time traveler wakes up in 1920s Paris with no memory, only to discover they're being hunted by a mysterious organization that knows their future"
+    id: "krishna-flute",
+    text: "A young musician discovers an ancient flute that belonged to Lord Krishna, and when played, it opens a portal to Vrindavan where they must help restore harmony between humans and nature"
   },
   {
-    id: "dream-recorder",
-    text: "In a world where dreams are recorded and sold as entertainment, a woman discovers her recurring nightmare is actually a suppressed memory of a crime she witnessed"
+    id: "magical-school",
+    text: "A shy 10-year-old girl finds a magical book that transports her to a school where animals can talk and teaches her the power of friendship and courage through exciting adventures"
   },
   {
-    id: "radio-dj",
-    text: "A small-town radio DJ receives a call from someone claiming to be from 50 years in the future, warning about an event that will happen in exactly 24 hours"
+    id: "corporate-ghost",
+    text: "A stressed corporate executive moves into an old Mumbai apartment only to discover it's haunted by the ghost of a 1940s freedom fighter who helps them find meaning beyond their 9-to-5 life"
   },
 ];
 
@@ -71,11 +71,7 @@ export const TIPS: Tip[] = [
   {
     id: "tone",
     text: "Specify the tone (dramatic, comedic, mysterious, etc.)"
-  },
-  {
-    id: "audio",
-    text: "Add any specific audio elements you'd like to hear"
-  },
+  }
 ];
 
 export const DEFAULT_LANGUAGE = "Hindi";

@@ -214,13 +214,13 @@ export async function getAudio(language: string, script: ScriptLine[], persona: 
 /**
  * Generates metadata (title and description) from storyline
  */
-export async function getMetadata(storyline: string): Promise<MetadataResponse> {
+export async function getMetadata(storyline: string, language: string): Promise<MetadataResponse> {
   const response = await fetch('/api/generate-metadata', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ storyline }),
+    body: JSON.stringify({ storyline, language }),
   });
 
   if (!response.ok) {

@@ -39,7 +39,7 @@ export const WORKFLOW_STEPS_DATA: WorkflowStepData[] = [
   },
   {
     title: "Audio Assets",
-    content: `[INFO] Generating ambient soundscapes...\n[INFO] Synthesizing character voices...\n[INFO] Composing original score...\n[SUCCESS] Audio assets generated. Mixing and mastering in progress...\n[COMPLETE] Your immersive audio experience is ready.`,
+    content: `Generating ambient soundscapes...\nSynthesizing character voices...\nComposing original score...\nAudio assets generated. Mixing and mastering in progress...\n✅ Your immersive audio experience is ready.`,
     loaderContent: [
       "🎵 Composing the soundtrack of your dreams...",
       "🎤 Synthesizing voices smoother than butter...",

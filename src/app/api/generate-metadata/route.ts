@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({
 
 export async function POST(request: NextRequest) {
   try {
-    const { storyline } = await request.json();
+    const { storyline, language } = await request.json();
 
     if (!storyline) {
       return NextResponse.json(
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     You are a professional content creator for audio stories. Based on the following storyline, generate an engaging title and description for the audio story.
 
     Storyline: ${storyline}
+    Language: ${language}
 
     Please provide your response in the following JSON format:
     {
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
 
     Requirements:
     - Title should be catchy and memorable
+    - Title and the description should be in the language of the user
     - Description should be engaging and give listeners a clear idea of what the story is about
     - Keep both title and description concise and appealing
     - Make sure the response is valid JSON

@@ -22,12 +22,10 @@ export const buildChatUrl = (
   id: string,
   prompt: string,
   language: string,
-  duration: string
 ): string => {
   const params = new URLSearchParams({
     prompt: prompt.trim(),
     language,
-    duration,
   });
   
   return `/chat/${id}?${params.toString()}`;

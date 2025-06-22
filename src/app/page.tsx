@@ -3,19 +3,17 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { LanguageDropdown } from "../components/LanguageDropdown";
-import { DurationDropdown } from "../components/DurationDropdown";
 import { TipsSection } from "../components/TipsSection";
 import { SuggestionsSection } from "../components/SuggestionsSection";
 import { AnimatedTitle } from "../components/AnimatedTitle";
 import { QuestionIcon, SparklesIcon } from "../components/icons";
-import { LANGUAGES, DURATIONS, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, DEFAULT_DURATION, APP_CONFIG } from "../constants";
+import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../constants";
 import { validatePrompt, generateChatId, buildChatUrl } from "../utils/validation";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [showTips, setShowTips] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LANGUAGE);
-  const [selectedDuration, setSelectedDuration] = useState(DEFAULT_DURATION);
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
@@ -28,11 +26,6 @@ export default function Home() {
   const handleLanguageSelect = useCallback((language: string) => {
     setSelectedLanguage(language);
   }, []);
-
-  const handleDurationSelect = useCallback((duration: string) => {
-    setSelectedDuration(duration);
-  }, []);
-
 
   const handleGenerate = useCallback(async () => {
     const validation = validatePrompt(prompt);
@@ -62,7 +55,7 @@ export default function Home() {
       }
 
       const id = generateChatId();
-      const url = buildChatUrl(id, prompt, selectedLanguage, selectedDuration);
+      const url = buildChatUrl(id, prompt, selectedLanguage);
       router.push(url);
 
     } catch (apiError) {
@@ -71,7 +64,7 @@ export default function Home() {
     } finally {
       setIsChecking(false);
     }
-  }, [prompt, selectedLanguage, selectedDuration, router]);
+  }, [prompt, selectedLanguage, router]);
 
   const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setPrompt(e.target.value);
@@ -119,20 +112,16 @@ export default function Home() {
             {/* Tips Icon */}
             <button
               onClick={() => setShowTips(!showTips)}
-              className="cursor-pointer p-2 h-10 w-10 flex items-center justify-center rounded-full transition-colors text-slate-500 hover:bg-slate-200/70"
+              className="cursor-pointer p-2 flex items-center justify-center rounded-md transition-colors text-slate-500 hover:bg-slate-200/70"
               title="Show writing tips"
               aria-label="Toggle writing tips"
               aria-expanded={showTips}
             >
-              <QuestionIcon />
+              <QuestionIcon className="w-4 h-4 mr-2" />
+              Writing Tips
             </button>
 
             <div className="flex items-center gap-3">
-              <DurationDropdown
-                  durations={DURATIONS}
-                  selectedDuration={selectedDuration}
-                  onDurationSelect={handleDurationSelect}
-                />
 
                 <LanguageDropdown
                 languages={LANGUAGES}

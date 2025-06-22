@@ -267,7 +267,7 @@ const useStepExecution = (
           // Generate audio, metadata, and thumbnail in parallel
           const [audio, metadata, thumbnail] = await Promise.all([
             getAudio(config.language || 'hindi', workflowData.script.script, workflowData.persona),
-            getMetadata(workflowData.storyOutline.plot_outline),
+            getMetadata(workflowData.storyOutline.plot_outline, config.language || 'hindi'),
             getThumbnail(workflowData.storyOutline.plot_outline, workflowData.storyOutline.setting, workflowData.storyOutline.style)
           ]);
 
