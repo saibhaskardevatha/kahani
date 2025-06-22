@@ -6,6 +6,7 @@ import { LanguageDropdown } from "../components/LanguageDropdown";
 import { TipsSection } from "../components/TipsSection";
 import { SuggestionsSection } from "../components/SuggestionsSection";
 import { AnimatedTitle } from "../components/AnimatedTitle";
+import { VoiceToText } from "../components/VoiceToText";
 import { QuestionIcon, SparklesIcon } from "../components/icons";
 import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../constants";
 import { validatePrompt, generateChatId, buildChatUrl } from "../utils/validation";
@@ -25,6 +26,11 @@ export default function Home() {
 
   const handleLanguageSelect = useCallback((language: string) => {
     setSelectedLanguage(language);
+  }, []);
+
+  const handleVoiceTextReceived = useCallback((text: string) => {
+    setPrompt(prev => prev + (prev ? ' ' : '') + text);
+    setError(null);
   }, []);
 
   const handleGenerate = useCallback(async () => {
@@ -91,16 +97,25 @@ export default function Home() {
         {/* Prompt Input Section */}
         <div className="w-full space-y-4">
           <div className="space-y-2">
-            <textarea
-              value={prompt}
-              onChange={handlePromptChange}
-              onKeyDown={handleKeyPress}
-              placeholder={APP_CONFIG.placeholder}
-              className="w-full min-h-[160px] p-5 rounded-md border-2 border-slate-200 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-black-500/50 font-[family-name:var(--font-geist-sans)] text-base"
-              style={{ fontFamily: "var(--font-geist-sans)" }}
-              aria-label="Story idea input"
-              aria-describedby={error ? "error-message" : undefined}
-            />
+            <div className="relative">
+              <textarea
+                value={prompt}
+                onChange={handlePromptChange}
+                onKeyDown={handleKeyPress}
+                placeholder={APP_CONFIG.placeholder}
+                className="w-full min-h-[160px] p-5 pr-12 rounded-md border-2 border-slate-200 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-black-500/50 font-[family-name:var(--font-geist-sans)] text-base with-voice-input"
+                style={{ fontFamily: "var(--font-geist-sans)" }}
+                aria-label="Story idea input"
+                aria-describedby={error ? "error-message" : undefined}
+              />
+              {/* Voice-to-text button positioned at bottom-left */}
+              <div className="absolute bottom-4.5 left-3 voice-to-text-container">
+                <VoiceToText 
+                  onTextReceived={handleVoiceTextReceived}
+                  disabled={isChecking}
+                />
+              </div>
+            </div>
             {error && (
               <p id="error-message" className="text-sm text-red-500">
                 {error}

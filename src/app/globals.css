@@ -194,4 +194,18 @@ input[type="range"].audio-progress:focus {
   outline: none;
 }
 
+/* Voice-to-text button positioning */
+.voice-to-text-container {
+  pointer-events: none;
+}
+
+.voice-to-text-container > * {
+  pointer-events: auto;
+}
+
+/* Ensure textarea padding doesn't overlap with voice button */
+textarea.with-voice-input {
+  padding-right: 3rem;
+}
+
 
