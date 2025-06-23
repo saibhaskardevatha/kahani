@@ -17,7 +17,6 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // Auto-clear error after 1 second
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
@@ -34,7 +33,6 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
       setIsRecording(true);
       setIsProcessing(false);
 
-      // Use Sarvam API for transcription
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 16000,
@@ -44,7 +42,6 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
         } 
       });
       
-      // Try different MIME types in order of preference (Sarvam API supported formats)
       const mimeTypes = [
         'audio/wav',
         'audio/mpeg',
@@ -69,11 +66,9 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
       }
       
       if (!selectedMimeType) {
-        // Fallback: let browser choose the best format without specifying codec
         console.log('No specific format supported, using browser default');
         mediaRecorderRef.current = new MediaRecorder(stream);
         
-        // Log what format the browser chose
         mediaRecorderRef.current.onstart = () => {
           console.log('Browser default MIME type:', mediaRecorderRef.current?.mimeType);
         };
@@ -95,24 +90,19 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
         setIsProcessing(true);
         
         try {
-          // Ensure we have audio data
           if (audioChunksRef.current.length === 0) {
             throw new Error('No audio data recorded');
           }
 
-          // Check if we have meaningful audio data (at least 1KB)
           const totalSize = audioChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0);
           if (totalSize < 1024) {
             throw new Error('Audio recording too short. Please speak for at least 1 second.');
           }
 
-          // Determine the correct MIME type and file extension
           const rawMimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
-          // Strip codec information (e.g., 'audio/webm;codecs=opus' -> 'audio/webm')
           const mimeType = rawMimeType.split(';')[0];
           const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
           
-          // Get proper file extension based on MIME type
           const getFileExtension = (mimeType: string) => {
             const extensions: { [key: string]: string } = {
               'audio/wav': 'wav',
@@ -146,7 +136,6 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
 
           console.log('Sending audio to API...');
 
-          // Send to Sarvam API for transcription
           const response = await fetch('/api/speech-to-text', {
             method: 'POST',
             body: formData,
@@ -225,19 +214,16 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
         />
       </button>
       
-      {/* Recording indicator */}
       {isRecording && (
         <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
       )}
       
-      {/* Processing indicator */}
       {isProcessing && (
         <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-spin">
           <div className="w-full h-full border-2 border-blue-300 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
       
-      {/* Error message */}
       {error && (
         <div className="absolute top-full left-0 mt-2 px-3 py-1 bg-red-100 text-red-700 text-xs rounded-md whitespace-nowrap z-10">
           {error}

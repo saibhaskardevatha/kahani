@@ -34,13 +34,6 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const debugInfo = document.querySelector('#debug-info');
-    if (debugInfo) {
-      debugInfo.remove();
-    }
-  }, []);
-
-  useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [steps, isWorkflowComplete]);
 

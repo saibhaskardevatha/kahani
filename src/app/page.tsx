@@ -45,28 +45,13 @@ export default function Home() {
     setIsChecking(true);
 
     try {
-      const response = await fetch('/api/check-prompt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      const data = await response.json();
-
-      if (data.blocked) {
-        setError(`Input blocked. Please try again.`);
-        return;
-      }
-
       const id = generateChatId();
       const url = buildChatUrl(id, prompt, selectedLanguage);
       router.push(url);
 
-    } catch (apiError) {
-      console.error(apiError);
-      setError("Failed to validate your storyline. Please try again.");
+    } catch (error) {
+      setError("Failed to create chat. Please try again.");
+      console.error(error);
     } finally {
       setIsChecking(false);
     }

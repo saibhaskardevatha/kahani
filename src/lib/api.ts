@@ -63,6 +63,13 @@ export interface ThumbnailResponse {
 }
 
 // ============================================================================
+// FALLBACK IMAGES
+// ============================================================================
+
+// Simple flower SVG converted to base64
+const FALLBACK_FLOWER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiBmaWxsPSIjRkZGRkZGIi8+CjxjaXJjbGUgY3g9IjUxMiIgY3k9IjUxMiIgcj0iNDAiIGZpbGw9IiNGRkMxMDciLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSg0NSkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoOTApIi8+CjxwYXRoIGQ9Ik01MTIgMjcyYzAgMCAwIDAgMCAwdjQ4MGMwIDAgMCAwIDAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZDMTA3IiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDEzNSkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwKSIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgyMjUpIi8+CjxwYXRoIGQ9Ik01MTIgMjcyYzAgMCAwIDAgMCAwdjQ4MGMwIDAgMCAwIDAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZDMTA3IiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDI3MCkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoMzE1KSIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgzNjApIi8+CjxjaXJjbGUgY3g9IjQxMiIgY3k9IjQxMiIgcj0iMjAiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iNjEyIiBjeT0iNDEyIiByPSIyMCIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSI0MTIiIGN5PSI2MTIiIHI9IjIwIiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjYxMiIgY3k9IjYxMiIgcj0iMjAiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iMzEyIiBjeT0iNTEyIiByPSIyMCIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSI3MTIiIGN5PSI1MTIiIHI9IjIwIiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjM1MiIgY3k9IjM1MiIgcj0iMTUiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iNjcyIiBjeT0iMzUyIiByPSIxNSIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSIzNTIiIGN5PSI2NzIiIHI9IjE1IiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjY3MiIgY3k9IjY3MiIgcj0iMTUiIGZpbGw9IiNGRkMxMDciLz4KPC9zdmc+";
+
+// ============================================================================
 // API CONFIGURATION
 // ============================================================================
 
@@ -255,7 +262,10 @@ export async function getThumbnail(storyline: string, setting: string = '', styl
   });
 
   if (!response.ok) {
-    throw new Error('Failed to generate thumbnail');
+    return {
+      imageBase64: FALLBACK_FLOWER_IMAGE,
+      textResponse: 'Failed to generate thumbnail - showing fallback flower image',
+    };
   }
 
   const data = await response.json();
