@@ -34,15 +34,17 @@ export default function Home() {
   }, []);
 
   const handleGenerate = useCallback(async () => {
+    setIsChecking(true);
+
     const validation = validatePrompt(prompt);
     
     if (!validation.isValid) {
       setError(validation.error || "Invalid input");
+      setIsChecking(false);
       return;
     }
 
     setError(null);
-    setIsChecking(true);
 
     try {
       const id = generateChatId();
