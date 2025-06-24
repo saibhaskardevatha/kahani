@@ -10,6 +10,7 @@ import { VoiceToText } from "../components/VoiceToText";
 import { QuestionIcon, SparklesIcon } from "../components/icons";
 import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../constants";
 import { validatePrompt, generateChatId, buildChatUrl } from "../utils/validation";
+import posthog from "../../instrumentation-client";
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -43,6 +44,12 @@ export default function Home() {
       setIsChecking(false);
       return;
     }
+
+    // Track PostHog event
+    posthog.capture("attempted_story_generation", {
+      prompt,
+      language: selectedLanguage,
+    });
 
     setError(null);
 
