@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 const galleryImages = [
@@ -17,7 +18,7 @@ export default function Home() {
       {/* Navigation Bar */}
       <nav className="w-full flex items-center justify-between px-8 py-6">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Kahani Logo" className="w-8 h-8" />
+          <Image src="/logo.png" alt="Kahani Logo" width={32} height={32} className="w-8 h-8" />
           <span className="text-lg font-bold text-[#D94F3A]">Kahani</span>
         </div>
         <div className="flex gap-2">
@@ -27,7 +28,7 @@ export default function Home() {
       </nav>
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-xl rounded-3xl bg-white/80  py-16 px-8 flex flex-col items-center gap-6">
-          <img src="/logo.png" alt="Kahani Logo" className="w-16 h-16 mb-4" />
+          <Image src="/logo.png" alt="Kahani Logo" width={64} height={64} className="w-16 h-16 mb-4" />
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 text-center leading-tight tracking-tight">Immersive Audio Stories <span className="text-[#D94F3A]">for Bharat</span></h1>
           <p className="text-xl text-gray-700 text-center max-w-lg">Create, listen, and share magical stories in your language. Powered by AI, voiced by you.</p>
           <Link href="/chat">
@@ -105,7 +106,7 @@ function GalleryWithModal({ images }: { images: { src: string; alt: string }[] }
             className={`min-w-[350px] snap-center rounded-3xl bg-white/70 backdrop-blur-md shadow-lg p-2 hover:scale-105 transition-transform cursor-pointer ${collageTransforms[idx % collageTransforms.length]}`}
             onClick={() => setExpandedImage(img)}
           >
-            <img src={img.src} alt={img.alt} className="rounded-2xl w-full" />
+            <Image src={img.src} alt={img.alt} width={350} height={200} className="rounded-2xl w-full" />
           </div>
         ))}
       </div>
@@ -115,11 +116,13 @@ function GalleryWithModal({ images }: { images: { src: string; alt: string }[] }
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
           onClick={() => setExpandedImage(null)}
         >
-          <img
+          <Image
             src={expandedImage.src}
             alt={expandedImage.alt}
+            width={900}
+            height={600}
             className="max-w-[90vw] max-h-[85vh] rounded-3xl shadow-2xl border-4 border-white"
-            onClick={e => e.stopPropagation()}
+            onClick={(e)=>e.stopPropagation()}
           />
         </div>
       )}
