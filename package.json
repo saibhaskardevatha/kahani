@@ -18,6 +18,8 @@
     "mime": "^4.0.7",
     "next": "15.3.4",
     "pangea-node-sdk": "^5.2.0-beta.3",
+    "posthog-js": "^1.255.1",
+    "posthog-node": "^5.1.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.3.1"

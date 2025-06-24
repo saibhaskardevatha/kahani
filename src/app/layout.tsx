@@ -24,21 +24,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <script>
-          (function() {
-            window.userbirdq = window.userbirdq || [];
-          window.USERBIRD_SITE_ID = 'MFluElDC';
-          var script = document.createElement('script');
-          script.defer = true;
-          script.setAttribute('data-site', window.USERBIRD_SITE_ID);
-          script.src = "https://cdn.userbird.com/analytics.min.js";
-          var currentScript = document.currentScript || document.getElementsByTagName('script')[0];
-          currentScript.parentNode.insertBefore(script, currentScript);
-})();
-        </script>
-      </head>
-
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
