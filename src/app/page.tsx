@@ -1,165 +1,130 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { LanguageDropdown } from "../components/LanguageDropdown";
-import { TipsSection } from "../components/TipsSection";
-import { SuggestionsSection } from "../components/SuggestionsSection";
-import { AnimatedTitle } from "../components/AnimatedTitle";
-import { VoiceToText } from "../components/VoiceToText";
-import { QuestionIcon, SparklesIcon } from "../components/icons";
-import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../constants";
-import { validatePrompt, generateChatId, buildChatUrl } from "../utils/validation";
-import posthog from "../../instrumentation-client";
+import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+
+const galleryImages = [
+  { src: "/ss1.png", alt: "Kahani App Screenshot 1" },
+  { src: "/ss2.png", alt: "Kahani App Screenshot 2" },
+  { src: "/ss3.png", alt: "Kahani App Screenshot 3" },
+  { src: "/ss4.png", alt: "Kahani App Screenshot 4" },
+  { src: "/ss5.png", alt: "Kahani App Screenshot 5" },
+];
 
 export default function Home() {
-  const [prompt, setPrompt] = useState("");
-  const [showTips, setShowTips] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState(DEFAULT_LANGUAGE);
-  const [error, setError] = useState<string | null>(null);
-  const [isChecking, setIsChecking] = useState(false);
-  const router = useRouter();
-
-  const handleSuggestionClick = useCallback((suggestion: string) => {
-    setPrompt(suggestion);
-    setError(null);
-  }, []);
-
-  const handleLanguageSelect = useCallback((language: string) => {
-    setSelectedLanguage(language);
-  }, []);
-
-  const handleVoiceTextReceived = useCallback((text: string) => {
-    setPrompt(prev => prev + (prev ? ' ' : '') + text);
-    setError(null);
-  }, []);
-
-  const handleGenerate = useCallback(async () => {
-    setIsChecking(true);
-
-    const validation = validatePrompt(prompt);
-    
-    if (!validation.isValid) {
-      setError(validation.error || "Invalid input");
-      setIsChecking(false);
-      return;
-    }
-
-    // Track PostHog event
-    posthog.capture("attempted_story_generation", {
-      prompt,
-      language: selectedLanguage,
-    });
-
-    setError(null);
-
-    try {
-      const id = generateChatId();
-      const url = buildChatUrl(id, prompt, selectedLanguage);
-      router.push(url);
-
-    } catch (error) {
-      setError("Failed to create chat. Please try again.");
-      console.error(error);
-    } finally {
-      setIsChecking(false);
-    }
-  }, [prompt, selectedLanguage, router]);
-
-  const handlePromptChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPrompt(e.target.value);
-    if (error) setError(null);
-  }, [error]);
-
-  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      handleGenerate();
-    }
-  }, [handleGenerate]);
-
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-2xl">
-        {/* Header */}  
-        <div className="text-center">
-          <AnimatedTitle />
-          <p className="text-muted-foreground">
-            {APP_CONFIG.description}
-          </p>
+    <div className="min-h-screen flex flex-col bg-white font-[family-name:var(--font-geist-sans)]">
+      {/* Navigation Bar */}
+      <nav className="w-full flex items-center justify-between px-8 py-6">
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="Kahani Logo" className="w-8 h-8" />
+          <span className="text-lg font-bold text-[#D94F3A]">Kahani</span>
         </div>
-
-        {/* Prompt Input Section */}
-        <div className="w-full space-y-4">
-          <div className="space-y-2">
-            <div className="relative">
-              <textarea
-                value={prompt}
-                onChange={handlePromptChange}
-                onKeyDown={handleKeyPress}
-                placeholder={APP_CONFIG.placeholder}
-                className="w-full min-h-[160px] p-5 pr-12 rounded-md border-2 border-slate-200 bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-black-500/50 font-[family-name:var(--font-geist-sans)] text-base with-voice-input"
-                style={{ fontFamily: "var(--font-geist-sans)" }}
-                aria-label="Story idea input"
-                aria-describedby={error ? "error-message" : undefined}
-              />
-              {/* Voice-to-text button positioned at bottom-left */}
-              <div className="absolute bottom-4.5 left-3 voice-to-text-container">
-                <VoiceToText 
-                  onTextReceived={handleVoiceTextReceived}
-                  disabled={isChecking}
-                />
-              </div>
-            </div>
-            {error && (
-              <p id="error-message" className="text-sm text-red-500">
-                {error}
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between">
-            {/* Tips Icon */}
-            <button
-              onClick={() => setShowTips(!showTips)}
-              className="cursor-pointer p-2 flex items-center justify-center rounded-md transition-colors text-slate-500 hover:bg-slate-200/70"
-              title="Show writing tips"
-              aria-label="Toggle writing tips"
-              aria-expanded={showTips}
-            >
-              <QuestionIcon className="w-4 h-4 mr-2" />
-              Writing Tips
-            </button>
-
-            <div className="flex items-center gap-3">
-
-                <LanguageDropdown
-                languages={LANGUAGES}
-                selectedLanguage={selectedLanguage}
-                onLanguageSelect={handleLanguageSelect}
-              />
-              
-              <button
-                onClick={handleGenerate}
-                disabled={!prompt.trim() || isChecking}
-                className="rounded-md flex items-center justify-center bg-black text-white gap-2 font-semibold text-sm h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md hover:shadow-lg transition-shadow"
-                aria-label="Create audio story"
-              >
-                {isChecking ? "Checking..." : APP_CONFIG.createButtonText}
-                <SparklesIcon />
-              </button>
-            </div>
-          </div>
-
-          {/* Tips Section */}
-          <TipsSection tips={TIPS} isVisible={showTips} />
+        <div className="flex gap-2">
+          <a href="/login" className="relative px-5 py-2 text-[#D94F3A] font-semibold group transition-all after:content-[''] after:absolute after:left-5 after:right-5 after:bottom-1 after:h-0.5 after:bg-[#D94F3A] after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100">Log in</a>
+          <a href="/login" className="px-5 py-2 rounded-full bg-[#D94F3A] text-white font-semibold shadow-md hover:bg-[#b63b28] transition-all">Sign up</a>
         </div>
-
-        {/* Suggestions Section */}
-        <SuggestionsSection
-          suggestions={SUGGESTIONS}
-          onSuggestionClick={handleSuggestionClick}
-        />
+      </nav>
+      <main className="flex-1 flex flex-col items-center justify-center px-4">
+        <div className="w-full max-w-xl rounded-3xl bg-white/80  py-16 px-8 flex flex-col items-center gap-6">
+          <img src="/logo.png" alt="Kahani Logo" className="w-16 h-16 mb-4" />
+          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 text-center leading-tight tracking-tight">Immersive Audio Stories <span className="text-[#D94F3A]">for Bharat</span></h1>
+          <p className="text-xl text-gray-700 text-center max-w-lg">Create, listen, and share magical stories in your language. Powered by AI, voiced by you.</p>
+          <Link href="/chat">
+          <button className="mt-2 bg-[#D94F3A] text-white font-bold px-10 py-4 rounded-full shadow-xl hover:bg-[#b63b28] transition-all text-xl hover:cursor-pointer" >
+            Try it now!
+          </button>
+          </Link>
+        </div>
       </main>
+
+      {/* Modern Embedded Gallery Section */}
+      <section className="w-full flex flex-col items-center mt-16">
+        <GalleryWithModal images={galleryImages} />
+      </section>
     </div>
   );
 }
+
+function GalleryWithModal({ images }: { images: { src: string; alt: string }[] }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const [expandedImage, setExpandedImage] = useState<null | { src: string; alt: string }>(null);
+
+  // Continuous auto-scroll logic
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || expandedImage) return;
+
+    let raf: number;
+    const speed = 1; // px per frame ~60px/s at 60fps
+
+    const loop = () => {
+      container.scrollLeft += speed;
+      if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
+        container.scrollLeft = 0; // reset for infinite loop
+      }
+      raf = requestAnimationFrame(loop);
+    };
+
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [expandedImage]);
+
+
+
+  // Modal close logic
+  useEffect(() => {
+    if (!expandedImage) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setExpandedImage(null);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [expandedImage]);
+
+  // Collage effect helpers
+  const collageTransforms = [
+    "rotate-2 -translate-y-3 z-10",
+    "-rotate-2 translate-y-2 z-20",
+    "rotate-1 -translate-y-1 z-0",
+    "-rotate-1 translate-y-3 z-10",
+    "rotate-3 -translate-y-2 z-20",
+  ];
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        className="w-full max-w-5xl flex overflow-x-hidden gap-8 py-6 px-2 scrollbar-hide"
+        style={{ pointerEvents: expandedImage ? "none" : "auto" }}
+      >
+        {images.map((img, idx) => (
+          <div
+            key={img.src}
+            className={`min-w-[350px] snap-center rounded-3xl bg-white/70 backdrop-blur-md shadow-lg p-2 hover:scale-105 transition-transform cursor-pointer ${collageTransforms[idx % collageTransforms.length]}`}
+            onClick={() => setExpandedImage(img)}
+          >
+            <img src={img.src} alt={img.alt} className="rounded-2xl w-full" />
+          </div>
+        ))}
+      </div>
+      {/* Modal */}
+      {expandedImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setExpandedImage(null)}
+        >
+          <img
+            src={expandedImage.src}
+            alt={expandedImage.alt}
+            className="max-w-[90vw] max-h-[85vh] rounded-3xl shadow-2xl border-4 border-white"
+            onClick={e => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+

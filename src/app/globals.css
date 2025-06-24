@@ -194,6 +194,10 @@ input[type="range"].audio-progress:focus {
   outline: none;
 }
 
+/* Hide scrollbars - utility */
+.scrollbar-hide::-webkit-scrollbar{display:none;}
+.scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none;}
+
 /* Voice-to-text button positioning */
 .voice-to-text-container {
   pointer-events: none;

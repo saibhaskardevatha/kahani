@@ -250,7 +250,7 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
         {/* Icon */}
         <div className="relative z-10">
           <MicrophoneIcon 
-            className={`w-5 h-5 transition-transform duration-300 ${
+            className={`w-3 h-3 transition-transform duration-300 ${
               isRecording ? 'animate-bounce' : 'group-hover:scale-110'
             }`} 
           />
