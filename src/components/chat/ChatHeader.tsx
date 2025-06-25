@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { StaticTitle } from '../StaticTitle';
+import { UserButton } from '@clerk/nextjs';
 
 interface ChatHeaderProps {
   language?: string;
@@ -23,27 +24,30 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ language = "Hindi" }) =>
         >
           <StaticTitle language={language} />
         </button>
-        <button
-          onClick={handleGoHome}
-          className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex-shrink-0"
-          aria-label="Create new story"
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleGoHome}
+            className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors flex-shrink-0"
+            aria-label="Create new story"
           >
-            <path d="M12 5v14" />
-            <path d="M5 12h14" />
-          </svg>
-          Create New Story
-        </button>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+            Create New Story
+          </button>
+          <UserButton appearance={{ elements: { avatarBox: 'w-7 h-7' } }} />
+        </div>
       </div>
     </header>
   );

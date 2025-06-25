@@ -11,6 +11,7 @@ import { QuestionIcon, SparklesIcon } from "../../components/icons";
 import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../../constants";
 import { validatePrompt, generateChatId, buildChatUrl } from "../../utils/validation";
 import posthog from "../../../instrumentation-client";
+import { useUser, UserButton } from '@clerk/nextjs';
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -19,6 +20,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
+  const { user } = useUser();
 
   const handleSuggestionClick = useCallback((suggestion: string) => {
     setPrompt(suggestion);
@@ -78,7 +80,7 @@ export default function Home() {
   }, [handleGenerate]);
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 font-[family-name:var(--font-geist-sans)]">
       <main className="flex flex-col gap-[32px] row-start-2 items-center w-full max-w-2xl">
         {/* Header */}  
         <div className="text-center">
@@ -160,6 +162,24 @@ export default function Home() {
           onSuggestionClick={handleSuggestionClick}
         />
       </main>
+      {/* Account section at the bottom */}
+      <div className="mt-6 flex flex-col items-center gap-1 text-center opacity-70 text-xs">
+        {user && (
+          <div className="flex items-center gap-2 justify-center">
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: 'w-6 h-6',
+                  userButtonPopoverCard: 'translate-x-1/4',
+                  userButtonTrigger: 'flex items-center gap-2 px-2 py-1 rounded cursor-pointer shadow-none focus:shadow-none',
+                  userButtonText: 'text-xs text-gray-700',
+                },
+              }}
+              showName={true}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

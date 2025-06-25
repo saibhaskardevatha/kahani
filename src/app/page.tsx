@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import Link from "next/link";
 
 const galleryImages = [
@@ -15,27 +16,25 @@ const galleryImages = [
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-white font-[family-name:var(--font-geist-sans)]">
-      {/* Navigation Bar */}
-      <nav className="w-full flex items-center justify-between px-8 py-6">
-        <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="Kahani Logo" width={32} height={32} className="w-8 h-8" />
-          <span className="text-lg font-bold text-[#D94F3A]">Kahani</span>
-        </div>
-        <div className="flex gap-2">
-          <a href="/login" className="relative px-5 py-2 text-[#D94F3A] font-semibold group transition-all after:content-[''] after:absolute after:left-5 after:right-5 after:bottom-1 after:h-0.5 after:bg-[#D94F3A] after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100">Log in</a>
-          <a href="/login" className="px-5 py-2 rounded-full bg-[#D94F3A] text-white font-semibold shadow-md hover:bg-[#b63b28] transition-all">Sign up</a>
-        </div>
-      </nav>
       <main className="flex-1 flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-xl rounded-3xl bg-white/80  py-16 px-8 flex flex-col items-center gap-6">
           <Image src="/logo.png" alt="Kahani Logo" width={64} height={64} className="w-16 h-16 mb-4" />
           <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 text-center leading-tight tracking-tight">Immersive Audio Stories <span className="text-[#D94F3A]">for Bharat</span></h1>
           <p className="text-xl text-gray-700 text-center max-w-lg">Create, listen, and share magical stories in your language. Powered by AI, voiced by you.</p>
-          <Link href="/chat">
-          <button className="mt-2 bg-[#D94F3A] text-white font-bold px-10 py-4 rounded-full shadow-xl hover:bg-[#b63b28] transition-all text-xl hover:cursor-pointer" >
-            Try it now!
-          </button>
-          </Link>
+          <SignedOut>
+            <SignInButton mode="modal" forceRedirectUrl="/chat">
+              <button className="mt-2 bg-[#D94F3A] text-white font-bold px-10 py-4 rounded-full shadow-xl hover:bg-[#b63b28] transition-all text-xl hover:cursor-pointer" >
+                Try it now!
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/chat">
+              <button className="mt-2 bg-[#D94F3A] text-white font-bold px-10 py-4 rounded-full shadow-xl hover:bg-[#b63b28] transition-all text-xl hover:cursor-pointer" >
+                Try it now!
+              </button>
+            </Link>
+          </SignedIn>
         </div>
       </main>
 
