@@ -228,7 +228,7 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
         onClick={handleClick}
         disabled={disabled}
         className={`
-          relative p-4 rounded-full transition-all duration-500 ease-out
+          relative p-3 rounded-full transition-all duration-500 ease-out
           ${isRecording 
             ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-2xl scale-110' 
             : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 hover:from-slate-200 hover:to-slate-300 hover:text-slate-700 hover:scale-105 shadow-lg hover:shadow-xl'
@@ -250,7 +250,7 @@ export const VoiceToText: React.FC<VoiceToTextProps> = ({
         {/* Icon */}
         <div className="relative z-10">
           <MicrophoneIcon 
-            className={`w-3 h-3 transition-transform duration-300 ${
+            className={`w-5 h-5 transition-transform duration-300 ${
               isRecording ? 'animate-bounce' : 'group-hover:scale-110'
             }`} 
           />
