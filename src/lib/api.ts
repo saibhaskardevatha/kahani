@@ -108,12 +108,12 @@ class APIClient {
     timeout: number = 120000 // 2-minute default timeout
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     // Fetch user ID dynamically from Clerk
-    const userId = 'user_2z0pZQuh1o19uBIYUvkTbxij20D'; 
+    const userId = 'user_2z0pZQuh1o19uBIYUvkTbxij20D';
     // const userId = getCurrentUserId && typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
     let authHeader: Record<string, string> = {};
     if (userId) {
@@ -140,7 +140,7 @@ class APIClient {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         throw new APIError(
           `API request failed: ${response.statusText}`,
@@ -157,7 +157,7 @@ class APIClient {
       if (error instanceof APIError) {
         throw error;
       }
-      
+
       throw new APIError(
         `Network error: ${error instanceof Error ? error.message : "Unknown error"}`,
         undefined,
@@ -273,7 +273,7 @@ export async function getThumbnail(storyline: string, setting: string = '', styl
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       prompt: JSON.stringify(promptData)
     }),
   });
@@ -303,16 +303,16 @@ export async function generateCompleteStory(userInput: string, language: string)
   try {
     // Step 1: Generate story outline
     const storyOutline = await getStoryOutline(userInput);
-    
+
     // Step 2: Generate persona
     const persona = await getPersona(storyOutline);
-    
+
     // Step 3: Generate script
     const script = await getScript(language, storyOutline, persona);
-    
+
     // Step 4: Generate audio
     const audio = await getAudio(language, script.script, persona);
-    
+
     return {
       storyOutline,
       persona,
@@ -334,7 +334,7 @@ export async function generateStoryWithPersona(userInput: string) {
   try {
     const storyOutline = await getStoryOutline(userInput);
     const persona = await getPersona(storyOutline);
-    
+
     return {
       storyOutline,
       persona,
