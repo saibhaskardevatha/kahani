@@ -12,7 +12,7 @@ import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../.
 import { validatePrompt, generateChatId, buildChatUrl } from "../../utils/validation";
 import posthog from "../../../instrumentation-client";
 import { useUser, UserButton } from '@clerk/nextjs';
-import DebugUserId from "@/components/DebugUserId";
+// import DebugUserId from "@/components/DebugUserId";
 
 
 export default function Home() {
