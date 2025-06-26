@@ -1,4 +1,5 @@
 import { getAudioURL } from "./utils";
+import { getCurrentUserId } from "./clerkUser";
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -73,7 +74,7 @@ const FALLBACK_FLOWER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCI
 // API CONFIGURATION
 // ============================================================================
 
-const API_BASE_URL = "https://kahani.thelamedev.site/api/v1";
+const API_BASE_URL = "https://api.playkahani.in/api/v1";
 
 // ============================================================================
 // ERROR HANDLING
@@ -111,15 +112,31 @@ class APIClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+    // Fetch user ID dynamically from Clerk
+    const userId = 'user_2z0pZQuh1o19uBIYUvkTbxij20D'; 
+    // const userId = getCurrentUserId && typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
+    let authHeader: Record<string, string> = {};
+    if (userId) {
+      authHeader = {
+        Authorization: `Basic ${userId}`,
+      };
+    }
+    // If userId is null, Authorization header will not be sent
     const defaultOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",
+        ...authHeader,
         ...options.headers,
       },
       signal: controller.signal,
     };
 
     const config = { ...defaultOptions, ...options };
+
+    // Log outgoing headers for debugging
+    if (typeof window !== 'undefined') {
+      console.log('[APIClient] Outgoing headers:', config.headers);
+    }
 
     try {
       const response = await fetch(url, config);

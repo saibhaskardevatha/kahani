@@ -8,8 +8,12 @@ import { AudioPlayer } from "@/components/chat/AudioPlayer";
 import { useWorkflow } from "@/hooks/useWorkflow";
 import { WorkflowStep as WorkflowStepType } from "@/types/chat";
 import { DEFAULT_LANGUAGE } from "@/constants";
+import { useAuth } from "@clerk/nextjs";
 
 export default function ChatPage() {
+
+
+
   const searchParams = useSearchParams();
   const prompt = searchParams.get("prompt");
   const language = searchParams.get("language") || DEFAULT_LANGUAGE;
@@ -45,9 +49,7 @@ export default function ChatPage() {
         <div className="space-y-8">
           {/* Prompt Section */}
           <div>
-            <p className="text-sm text-slate-500 mb-2">
-              Your Storyline
-            </p>
+            <p className="text-sm text-slate-500 mb-2">Your Storyline</p>
             <h1 className="text-2xl font-bold text-slate-900">
               {prompt || "No prompt provided"}
             </h1>
@@ -84,12 +86,14 @@ export default function ChatPage() {
                   onResumeTimer={handleResumeTimer}
                 />
               ))}
-              {audioUrl && isWorkflowComplete && <AudioPlayer 
-                title={metadata?.title || "Your Audio Story"} 
-                description={metadata?.description || "Listen to the generated episode"} 
-                audioUrl={audioUrl} 
-                thumbnailUrl={thumbnail || "https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} 
-              />}
+              {audioUrl && isWorkflowComplete && (
+                <AudioPlayer 
+                  title={metadata?.title || "Your Audio Story"} 
+                  description={metadata?.description || "Listen to the generated episode"} 
+                  audioUrl={audioUrl} 
+                  thumbnailUrl={thumbnail || "https://images.pexels.com/photos/10976653/pexels-photo-10976653.jpeg"} 
+                />
+              )}
               <div ref={bottomRef} />
             </div>
           )}

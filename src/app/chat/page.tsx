@@ -12,6 +12,8 @@ import { LANGUAGES, SUGGESTIONS, TIPS, DEFAULT_LANGUAGE, APP_CONFIG } from "../.
 import { validatePrompt, generateChatId, buildChatUrl } from "../../utils/validation";
 import posthog from "../../../instrumentation-client";
 import { useUser, UserButton } from '@clerk/nextjs';
+import DebugUserId from "@/components/DebugUserId";
+
 
 export default function Home() {
   const [prompt, setPrompt] = useState("");
@@ -21,6 +23,8 @@ export default function Home() {
   const [isChecking, setIsChecking] = useState(false);
   const router = useRouter();
   const { user } = useUser();
+
+  
 
   const handleSuggestionClick = useCallback((suggestion: string) => {
     setPrompt(suggestion);
@@ -89,6 +93,7 @@ export default function Home() {
             {APP_CONFIG.description}
           </p>
         </div>
+        <DebugUserId />
 
         {/* Prompt Input Section */}
         <div className="w-full space-y-4">
