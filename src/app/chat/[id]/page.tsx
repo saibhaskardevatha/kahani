@@ -8,7 +8,6 @@ import { AudioPlayer } from "@/components/chat/AudioPlayer";
 import { useWorkflow } from "@/hooks/useWorkflow";
 import { WorkflowStep as WorkflowStepType } from "@/types/chat";
 import { DEFAULT_LANGUAGE } from "@/constants";
-import { useAuth } from "@clerk/nextjs";
 
 export default function ChatPage() {
 

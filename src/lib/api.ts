@@ -1,5 +1,5 @@
 import { getAudioURL } from "./utils";
-import { getCurrentUserId } from "./clerkUser";
+// import { useCurrentUserId } from './clerkUser';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -114,7 +114,8 @@ class APIClient {
 
     // Fetch user ID dynamically from Clerk
     const userId = 'user_2z0pZQuh1o19uBIYUvkTbxij20D'; 
-    // const userId = getCurrentUserId && typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
+    // To use dynamic userId from Clerk in React components/hooks:
+// const userId = useCurrentUserId && typeof useCurrentUserId === 'function' ? useCurrentUserId() : null;
     let authHeader: Record<string, string> = {};
     if (userId) {
       authHeader = {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -133,10 +134,13 @@ export default function ImageGenerator() {
             <div className="space-y-2">
               <h3 className="text-lg font-medium">Generated Illustration:</h3>
               <div className="border rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={`data:image/png;base64,${imageBase64}`}
                   alt="Generated illustration"
-                  className="w-full h-auto"
+                  width={800}
+                  height={600}
+                  className="w-full h-auto rounded-lg shadow-lg object-cover mt-4"
+                  priority
                 />
               </div>
             </div>

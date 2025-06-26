@@ -93,7 +93,7 @@ export default function Home() {
             {APP_CONFIG.description}
           </p>
         </div>
-        <DebugUserId />
+        {/* <DebugUserId /> */}
 
         {/* Prompt Input Section */}
         <div className="w-full space-y-4">
