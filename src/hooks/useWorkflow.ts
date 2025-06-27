@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WorkflowStep, WorkflowStepData } from '../types/chat';
 import { WORKFLOW_STEPS_DATA, WORKFLOW_CONFIG, WORKFLOW_STATUS } from '../constants/workflow';
-import { getStoryOutline, getPersona, getScript, getAudio, getMetadata, getThumbnail, StoryOutlineResponse, PersonaResponse, ScriptResponse } from '../lib/api';
+import { getStoryOutline, getPersona, getScript, getAudio, getMetadata, getThumbnail, FALLBACK_FLOWER_IMAGE, StoryOutlineResponse, PersonaResponse, ScriptResponse } from '../lib/api';
 
 // ============================================================================
 // TYPES
@@ -221,7 +221,7 @@ const useStepExecution = (
           if (!prompt) {
             throw new Error('No prompt provided for story outline generation');
           }
-          const storyOutline = await getStoryOutline(prompt);
+          const storyOutline = await getStoryOutline(prompt, config.language || 'hindi');
           workflowData.setStoryOutline(storyOutline);
           onDataReceived(stepIndex, storyOutline.plot_outline);
           break;
@@ -243,8 +243,7 @@ const useStepExecution = (
           if (!workflowData.storyOutline || !workflowData.persona) {
             throw new Error('Missing story outline or persona data');
           }
-          const language = config.language || 'hindi'; // Default to hindi if not specified
-          const script = await getScript(language, workflowData.storyOutline, workflowData.persona);
+          const script = await getScript(workflowData.storyOutline);
           workflowData.setScript(script);
           
           const formattedScript = script.script.map((line) =>
@@ -264,16 +263,32 @@ const useStepExecution = (
             throw new Error('Story outline data not available for metadata generation.');
           }
 
-          // Generate audio, metadata, and thumbnail in parallel
-          const [audio, metadata, thumbnail] = await Promise.all([
-            getAudio(config.language || 'hindi', workflowData.script.script, workflowData.persona),
+          // Generate audio (critical) and attempt metadata/thumbnail in parallel
+          const [audioResult, metadataResult, thumbnailResult] = await Promise.allSettled([
+            getAudio(workflowData.storyOutline!.story_id),
             getMetadata(workflowData.storyOutline.plot_outline, config.language || 'hindi'),
-            getThumbnail(workflowData.storyOutline.plot_outline, workflowData.storyOutline.setting, workflowData.storyOutline.style)
+            getThumbnail(workflowData.storyOutline.plot_outline, workflowData.storyOutline.setting, workflowData.storyOutline.style),
           ]);
+
+          // Handle audio (must succeed)
+          if (audioResult.status === 'rejected') {
+            throw (audioResult.reason ?? new Error('Failed to generate audio'));
+          }
+          const audio = audioResult.value;
+
+          // Handle metadata fallback
+          const metadata = metadataResult.status === 'fulfilled'
+            ? metadataResult.value
+            : { title: 'Title', description: 'Description' };
+
+          // Handle thumbnail fallback
+          const thumbnailData = thumbnailResult.status === 'fulfilled'
+            ? thumbnailResult.value
+            : { imageBase64: FALLBACK_FLOWER_IMAGE };
 
           onAudioReady(audio.audio_url);
           onMetadataReady(metadata);
-          onThumbnailReady(`data:image/png;base64,${thumbnail.imageBase64}`);
+          onThumbnailReady(`data:image/png;base64,${thumbnailData.imageBase64}`);
           onDataReceived(stepIndex, WORKFLOW_STEPS_DATA[stepIndex].content);
           break;
 

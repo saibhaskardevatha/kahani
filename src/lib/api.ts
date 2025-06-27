@@ -6,8 +6,9 @@ import { getAudioURL } from "./utils";
 // ============================================================================
 
 export interface StoryOutlineResponse {
+  story_id: string;
   plot_outline: string;
-  characters: string[];
+  characters: { name: string; description: string }[];
   mood: string;
   tone: string;
   setting: string;
@@ -68,7 +69,7 @@ export interface ThumbnailResponse {
 // ============================================================================
 
 // Simple flower SVG converted to base64
-const FALLBACK_FLOWER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiBmaWxsPSIjRkZGRkZGIi8+CjxjaXJjbGUgY3g9IjUxMiIgY3k9IjUxMiIgcj0iNDAiIGZpbGw9IiNGRkMxMDciLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSg0NSkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoOTApIi8+CjxwYXRoIGQ9Ik01MTIgMjcyYzAgMCAwIDAgMCAwdjQ4MGMwIDAgMCAwIDAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZDMTA3IiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDEzNSkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwKSIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgyMjUpIi8+CjxwYXRoIGQ9Ik01MTIgMjcyYzAgMCAwIDAgMCAwdjQ4MGMwIDAgMCAwIDAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZDMTA3IiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDI3MCkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoMzE1KSIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgzNjApIi8+CjxjaXJjbGUgY3g9IjQxMiIgY3k9IjQxMiIgcj0iMjAiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iNjEyIiBjeT0iNDEyIiByPSIyMCIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSI0MTIiIGN5PSI2MTIiIHI9IjIwIiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjYxMiIgY3k9IjYxMiIgcj0iMjAiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iMzEyIiBjeT0iNTEyIiByPSIyMCIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSI3MTIiIGN5PSI1MTIiIHI9IjIwIiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjM1MiIgY3k9IjM1MiIgcj0iMTUiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iNjcyIiBjeT0iMzUyIiByPSIxNSIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSIzNTIiIGN5PSI2NzIiIHI9IjE1IiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjY3MiIgY3k9IjY3MiIgcj0iMTUiIGZpbGw9IiNGRkMxMDciLz4KPC9zdmc+";
+export const FALLBACK_FLOWER_IMAGE = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiB2aWV3Qm94PSIwIDAgMTAyNCAxMDI0IiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAyNCIgaGVpZ2h0PSIxMDI0IiBmaWxsPSIjRkZGRkZGIi8+CjxjaXJjbGUgY3g9IjUxMiIgY3k9IjUxMiIgcj0iNDAiIGZpbGw9IiNGRkMxMDciLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSg0NSkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoOTApIi8+CjxwYXRoIGQ9Ik01MTIgMjcyYzAgMCAwIDAgMCAwdjQ4MGMwIDAgMCAwIDAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZDMTA3IiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDEzNSkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoMTgwKSIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgyMjUpIi8+CjxwYXRoIGQ9Ik01MTIgMjcyYzAgMCAwIDAgMCAwdjQ4MGMwIDAgMCAwIDAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkZDMTA3IiBzdHJva2Utd2lkdGg9IjgiIHRyYW5zZm9ybT0icm90YXRlKDI3MCkiLz4KPHBhdGggZD0iTTUxMiAyNzJjMCAwIDAgMCAwIDB2NDgwYzAgMCAwIDAgMCAwIiBmaWxsPSJub25lIiBzdHJva2U9IiNGRkMxMDciIHN0cm9rZS13aWR0aD0iOCIgdHJhbnNmb3JtPSJyb3RhdGUoMzE1KSIvPgo8cGF0aCBkPSJNNTEyIDI3MmMwIDAgMCAwIDAgMHY0ODBjMCAwIDAgMCAwIDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZGQzEwNyIgc3Ryb2tlLXdpZHRoPSI4IiB0cmFuc2Zvcm09InJvdGF0ZSgzNjApIi8+CjxjaXJjbGUgY3g9IjQxMiIgY3k9IjQxMiIgcj0iMjAiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iNjEyIiBjeT0iNDEyIiByPSIyMCIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSI0MTIiIGN5PSI2MTIiIHI9IjIwIiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjYxMiIgY3k9IjYxMiIgcj0iMjAiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iMzEyIiBjeT0iNTEyIiByPSIyMCIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSI3MTIiIGN5PSI1MTIiIHI9IjIwIiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjM1MiIgY3k9IjM1MiIgcj0iMTUiIGZpbGw9IiNGRkMxMDciLz4KPGNpcmNsZSBjeD0iNjcyIiBjeT0iMzUyIiByPSIxNSIgZmlsbD0iI0ZGQzEwNyIvPgo8Y2lyY2xlIGN4PSIzNTIiIGN5PSI2NzIiIHI9IjE1IiBmaWxsPSIjRkZDMTA3Ii8+CjxjaXJjbGUgY3g9IjY3MiIgY3k9IjY3MiIgcj0iMTUiIGZpbGw9IiNGRkMxMDciLz4KPC9zdmc+";
 
 // ============================================================================
 // API CONFIGURATION
@@ -102,7 +103,7 @@ class APIClient {
     this.baseURL = baseURL;
   }
 
-  private async request<T>(
+  async request<T>(
     endpoint: string,
     options: RequestInit = {},
     timeout: number = 120000 // 2-minute default timeout
@@ -122,12 +123,17 @@ class APIClient {
       };
     }
     // If userId is null, Authorization header will not be sent
+    const method = (options.method || 'GET').toUpperCase();
+    const computedHeaders: Record<string, string> = {
+      ...authHeader,
+      ...(options.headers as Record<string, string> | undefined),
+    };
+    if (!(method === 'GET' || method === 'HEAD')) {
+      computedHeaders['Content-Type'] = 'application/json';
+    }
+
     const defaultOptions: RequestInit = {
-      headers: {
-        "Content-Type": "application/json",
-        ...authHeader,
-        ...options.headers,
-      },
+      headers: computedHeaders,
       signal: controller.signal,
     };
 
@@ -168,6 +174,10 @@ class APIClient {
     }
   }
 
+  async get<T>(endpoint: string, timeout?: number): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' }, timeout);
+  }
+
   async post<T>(endpoint: string, data: unknown, timeout?: number): Promise<T> {
     return this.request<T>(
       endpoint,
@@ -190,54 +200,55 @@ const apiClient = new APIClient();
 // API FUNCTIONS
 // ============================================================================
 
-/**
- * Fetches story outline based on user input
- */
-export async function getStoryOutline(user_input: string): Promise<StoryOutlineResponse> {
-  return apiClient.post<StoryOutlineResponse>("/storyline", { user_input , language:"hindi" });
+
+// Fetches story outline based on user input
+export async function getStoryOutline(user_input: string, language: string = "hindi"): Promise<StoryOutlineResponse> {
+  type ApiResp = { story_id: string; storyline: Omit<StoryOutlineResponse, 'story_id'> };
+  const data = await apiClient.post<ApiResp>("/storyline", { user_input, language: language.toLowerCase() });
+  return { story_id: data.story_id, ...data.storyline } as StoryOutlineResponse;
 }
 
-/**
- * Fetches persona information based on story outline
- */
+// Fetches persona information based on story outline
 export async function getPersona(storylineOutput: StoryOutlineResponse): Promise<PersonaResponse> {
-  return apiClient.post<PersonaResponse>("/persona", storylineOutput);
+  const { story_id } = storylineOutput;
+  const data = await apiClient.get<{ persona: PersonaResponse }>(`/persona/${story_id}`);
+  return data.persona;
 }
 
-/**
- * Fetches script based on language, story outline, and persona
- */
-export async function getScript(
-  language: string,
-  story_outline: StoryOutlineResponse,
-  persona: PersonaResponse
-): Promise<ScriptResponse> {
-  return apiClient.post<ScriptResponse>("/script", {
-    language,
-    story_outline,
-    persona,
-  });
+// Fetches script based on language, story outline, and persona
+export async function getScript(story_outline: StoryOutlineResponse): Promise<ScriptResponse & { story_id: string }> {
+  const { story_id } = story_outline;
+  return apiClient.get<ScriptResponse & { story_id: string }>(`/script/${story_id}`);
 }
 
-/**
- * Fetches audio based on script
- */
-export async function getAudio(language: string, script: ScriptLine[], persona: PersonaResponse): Promise<AudioResponse> {
+// Fetches audio based on script
+export async function getAudio(story_id: string): Promise<AudioResponse> {
   const fiveMinuteTimeout = 300000;
-  const data = await apiClient.post<{ audio_path: string }>(
-    "/voice",
-    { language: language.toLowerCase(), script, persona },
-    fiveMinuteTimeout
-  );
-  console.log(data);
-  return {
-    audio_url: getAudioURL(API_BASE_URL, data.audio_path),
-  };
+  const maxAttempts = 10;
+  const retryDelayMs = 300000;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const data = await apiClient.get<{ audio_path: string }>(`/voice/${story_id}`, fiveMinuteTimeout);
+      if (data?.audio_path) {
+        return {
+          audio_url: getAudioURL(API_BASE_URL, data.audio_path),
+        };
+      }
+      // If audio_path is missing, fall through to retry
+    } catch (err) {
+      // If final attempt or error is 4xx, rethrow
+      if (attempt === maxAttempts) {
+        throw err;
+      }
+      // Otherwise ignore and retry after delay
+    }
+    await new Promise((res) => setTimeout(res, retryDelayMs * attempt));
+  }
+  throw new APIError('Audio not ready after multiple attempts', 500, `/voice/${story_id}`);
 }
 
-/**
- * Generates metadata (title and description) from storyline
- */
+// Generates metadata (title and description) from storyline
 export async function getMetadata(storyline: string, language: string): Promise<MetadataResponse> {
   const response = await fetch('/api/generate-metadata', {
     method: 'POST',
@@ -258,9 +269,7 @@ export async function getMetadata(storyline: string, language: string): Promise<
   };
 }
 
-/**
- * Generates thumbnail image from storyline
- */
+// Generates thumbnail image from storyline
 export async function getThumbnail(storyline: string, setting: string = '', style: string = ''): Promise<ThumbnailResponse> {
   const promptData = {
     plot_outline: storyline,
@@ -296,10 +305,8 @@ export async function getThumbnail(storyline: string, setting: string = '', styl
 // WORKFLOW FUNCTIONS (HIGHER-LEVEL API)
 // ============================================================================
 
-/**
- * Complete workflow: Story outline → Persona → Script → Audio
- */
-export async function generateCompleteStory(userInput: string, language: string) {
+// Complete workflow: Story outline → Persona → Script → Audio
+export async function generateCompleteStory(userInput: string, _language: string) {
   try {
     // Step 1: Generate story outline
     const storyOutline = await getStoryOutline(userInput);
@@ -308,10 +315,10 @@ export async function generateCompleteStory(userInput: string, language: string)
     const persona = await getPersona(storyOutline);
 
     // Step 3: Generate script
-    const script = await getScript(language, storyOutline, persona);
+    const script = await getScript(storyOutline);
 
     // Step 4: Generate audio
-    const audio = await getAudio(language, script.script, persona);
+    const audio = await getAudio(storyOutline.story_id);
 
     return {
       storyOutline,
@@ -327,9 +334,7 @@ export async function generateCompleteStory(userInput: string, language: string)
   }
 }
 
-/**
- * Generate story outline and persona only
- */
+// Generate story outline and persona only
 export async function generateStoryWithPersona(userInput: string) {
   try {
     const storyOutline = await getStoryOutline(userInput);
