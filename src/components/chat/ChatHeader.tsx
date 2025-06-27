@@ -11,7 +11,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ language = "Hindi" }) =>
   const router = useRouter();
 
   const handleGoHome = () => {
-    router.push("/");
+    router.push("/chat");
   };
 
   return (

@@ -374,45 +374,52 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
     }, 40); // Update roughly 25 times per second
   }, [updateStep]);
 
-  const onDataReceived = useCallback((stepIndex: number, fullText: string) => {
-    if (streamIntervalRef.current) {
+  // --------------------------------------------------------------------------
+  // DATA STREAM & ERROR HANDLERS (required by useStepExecution)
+  // --------------------------------------------------------------------------
+
+  const onDataReceived = useCallback(
+    (stepIndex: number, rawText: string | undefined) => {
+      if (streamIntervalRef.current) {
         clearInterval(streamIntervalRef.current);
-    }
-
-    updateStep(stepIndex, { streamedContent: '' });
-
-    const startTime = Date.now();
-    const streamingSpeed = WORKFLOW_CONFIG.streamingSpeed;
-
-    streamIntervalRef.current = setInterval(() => {
-      const elapsedTime = Date.now() - startTime;
-      const charsToShow = Math.floor(elapsedTime / streamingSpeed);
-
-      if (charsToShow >= fullText.length) {
-        clearInterval(streamIntervalRef.current!);
-        streamIntervalRef.current = null;
-        updateStep(stepIndex, { streamedContent: fullText });
-        completeStep(stepIndex);
-        return;
       }
 
-      updateStep(stepIndex, { streamedContent: fullText.slice(0, charsToShow) });
-    }, 40); // Update roughly 25 times per second
-  }, [completeStep, updateStep]);
+      const fullText = rawText ?? '';
+      updateStep(stepIndex, { streamedContent: '' });
 
-  const handleStepError = useCallback((stepIndex: number, error: string) => {
-    console.error(`Step ${stepIndex} failed:`, error);
-    
-    updateStep(stepIndex, {
-      streamedContent: `❌ **Error occurred:** ${error}\n\n**Possible solutions:**\n• Check your internet connection\n• Try again with a different prompt\n• Contact support if the issue persists`,
-      status: WORKFLOW_STATUS.COMPLETED,
-      isExpanded: true,
-    });
-    
-    // Don't auto-continue on error, let user decide
-    markUserInteraction();
-    completeStep(stepIndex);
-  }, [updateStep, completeStep, markUserInteraction]);
+      const startTime = Date.now();
+      const streamingSpeed = WORKFLOW_CONFIG.streamingSpeed;
+
+      streamIntervalRef.current = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const charsToShow = Math.floor(elapsedTime / streamingSpeed);
+
+        if (charsToShow >= fullText.length) {
+          clearInterval(streamIntervalRef.current!);
+          streamIntervalRef.current = null;
+          updateStep(stepIndex, { streamedContent: fullText });
+          completeStep(stepIndex);
+          return;
+        }
+        updateStep(stepIndex, { streamedContent: fullText.slice(0, charsToShow) });
+      }, 40);
+    },
+    [updateStep, completeStep]
+  );
+
+  const handleStepError = useCallback(
+    (stepIndex: number, error: string) => {
+      console.error(`Step ${stepIndex} failed:`, error);
+      updateStep(stepIndex, {
+        streamedContent: `❌ **Error occurred:** ${error}\n\n**Possible solutions:**\n• Check your internet connection\n• Try again with a different prompt\n• Contact support if the issue persists`,
+        status: WORKFLOW_STATUS.COMPLETED,
+        isExpanded: true,
+      });
+      markUserInteraction();
+      completeStep(stepIndex);
+    },
+    [updateStep, completeStep, markUserInteraction]
+  );
 
   const stepExecution = useStepExecution(
     steps,
@@ -532,7 +539,7 @@ export const useWorkflow = (prompt: string | null, config: WorkflowConfig = {}):
       }, WORKFLOW_CONFIG.stepStartDelay);
       return () => clearTimeout(timer);
     }
-  }, [isPlanning, prompt, currentStepIndex, steps, updateStep, stepExecution, streamLoaderText]);
+  }, [isPlanning, prompt, currentStepIndex, steps, updateStep, streamLoaderText]);
 
   // Final cleanup on unmount
   useEffect(() => {

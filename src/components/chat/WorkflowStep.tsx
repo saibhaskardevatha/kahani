@@ -112,7 +112,7 @@ export const WorkflowStep: React.FC<WorkflowStepProps> = ({
 
         <div
           className="grid transition-[grid-template-rows] duration-300 ease-in-out"
-          style={{ gridTemplateRows: showContent && content ? "1fr" : "0fr" }}
+          style={{ gridTemplateRows: showContent && content ? "auto" : "0fr" }}
         >
           <div className="overflow-hidden">
             <div className="mt-2 text-slate-600 whitespace-pre-wrap leading-relaxed text-sm">

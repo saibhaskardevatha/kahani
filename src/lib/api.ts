@@ -113,12 +113,12 @@ class APIClient {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     // Fetch user ID dynamically from Clerk
-    const userId = 'user_2z0pZQuh1o19uBIYUvkTbxij20D'; 
+    const userId = 'user_2z3bndY6Unq36m7K1qgLrDbnuAW'; 
     // const userId = getCurrentUserId && typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
     let authHeader: Record<string, string> = {};
     if (userId) {
       authHeader = {
-        Authorization: `Basic ${userId}`,
+        Authorization: `Bearer ${btoa(userId)}`,
       };
     }
     // If userId is null, Authorization header will not be sent
@@ -194,7 +194,7 @@ const apiClient = new APIClient();
  * Fetches story outline based on user input
  */
 export async function getStoryOutline(user_input: string): Promise<StoryOutlineResponse> {
-  return apiClient.post<StoryOutlineResponse>("/storyline", { user_input });
+  return apiClient.post<StoryOutlineResponse>("/storyline", { user_input , language:"hindi" });
 }
 
 /**
