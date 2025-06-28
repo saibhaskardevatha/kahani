@@ -1,4 +1,5 @@
 import { getAudioURL } from "./utils";
+import { getCurrentUserId } from "./clerkUser";
 // import { useCurrentUserId } from './clerkUser';
 
 // ============================================================================
@@ -114,8 +115,8 @@ class APIClient {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     // Fetch user ID dynamically from Clerk
-    const userId = 'user_2z3bndY6Unq36m7K1qgLrDbnuAW'; 
-    // const userId = getCurrentUserId && typeof getCurrentUserId === 'function' ? getCurrentUserId() : null;
+    // const userId = 'user_2z3bndY6Unq36m7K1qgLrDbnuAW'; 
+    const userId = getCurrentUserId();
     let authHeader: Record<string, string> = {};
     if (userId) {
       authHeader = {
